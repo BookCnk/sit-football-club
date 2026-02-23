@@ -96,10 +96,20 @@ export default function MatchDataCenter({ nextMatch, lastResult }: Props) {
           </div>
 
           <div className="flex items-center justify-between">
-            {/* Home team with logo placeholder */}
+            {/* Home team with logo */}
             <div className={`text-center ${lastResult.winner === 'home' ? '' : 'opacity-50'}`}>
-              <div className="w-12 h-12 bg-neutral-800 rounded-full flex items-center justify-center border border-white/10 mb-2 mx-auto">
-                <span className="text-[10px] font-bold text-neutral-400 uppercase">{lastResult.homeTeam.slice(0, 3)}</span>
+              <div className="w-12 h-12 bg-neutral-800 rounded-full flex items-center justify-center border border-white/10 mb-2 mx-auto overflow-hidden">
+                {lastResult.homeLogo ? (
+                  <Image
+                    src={lastResult.homeLogo}
+                    alt={lastResult.homeTeam}
+                    width={48}
+                    height={48}
+                    className="object-contain"
+                  />
+                ) : (
+                  <span className="text-[10px] font-bold text-neutral-400 uppercase">{lastResult.homeTeam.slice(0, 3)}</span>
+                )}
               </div>
               <span className="block text-lg font-display font-bold mb-1">{lastResult.homeTeam}</span>
               <span className="text-[10px] uppercase tracking-widest text-neutral-500">Home</span>
@@ -118,9 +128,9 @@ export default function MatchDataCenter({ nextMatch, lastResult }: Props) {
             {/* Away team with logo */}
             <div className="text-center">
               <div className="w-12 h-12 bg-neutral-800 rounded-full flex items-center justify-center border border-white/10 mb-2 mx-auto overflow-hidden">
-                {nextMatch.home.logo ? (
+                {lastResult.awayLogo ? (
                   <Image
-                    src={nextMatch.home.logo}
+                    src={lastResult.awayLogo}
                     alt={lastResult.awayTeam}
                     width={48}
                     height={48}
@@ -143,9 +153,9 @@ export default function MatchDataCenter({ nextMatch, lastResult }: Props) {
             <div className="text-xs text-neutral-400">
               <span className="text-neutral-600 uppercase mr-2">Scorers:</span> {lastResult.scorers}
             </div>
-            <a href="#" className="text-[10px] uppercase font-bold tracking-widest hover:text-red-500 transition-colors">
+            {/* <a href="#" className="text-[10px] uppercase font-bold tracking-widest hover:text-red-500 transition-colors">
               Match Report -&gt;
-            </a>
+            </a> */}
           </div>
         </div>
       </div>

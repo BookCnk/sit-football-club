@@ -3,7 +3,13 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Facebook, Twitter, Instagram, ChevronDown, Menu, X } from 'lucide-react';
+import { Instagram, Menu, X } from 'lucide-react';
+
+const NAV_LINKS = [
+  { label: 'TEAM', href: '#' },
+  { label: 'SHOP', href: '/shop' },
+  { label: 'HISTORY', href: '#' },
+];
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -28,27 +34,24 @@ export default function Navbar() {
 
         {/* Desktop Menu */}
         <div className="hidden lg:flex items-center gap-8 text-xs font-medium tracking-widest text-neutral-400">
-          <Link href="#" className="hover:text-white transition-colors">NEWS</Link>
-          <Link href="#" className="hover:text-white transition-colors flex items-center gap-1">
-            CLUB <ChevronDown className="w-3 h-3" />
-          </Link>
-          <Link href="#" className="hover:text-white transition-colors flex items-center gap-1">
-            TEAMS <ChevronDown className="w-3 h-3" />
-          </Link>
-          <Link href="#" className="hover:text-white transition-colors">TICKETS</Link>
-          <Link href="#" className="hover:text-white transition-colors text-red-500">SHOP</Link>
-          <Link href="#" className="hover:text-white transition-colors">COMMERCIAL</Link>
+          {NAV_LINKS.map(({ label, href }) => (
+            <Link
+              key={label}
+              href={href}
+              className={`hover:text-white transition-colors ${label === 'SHOP' ? 'text-red-500' : ''}`}
+            >
+              {label}
+            </Link>
+          ))}
         </div>
 
         {/* Actions */}
         <div className="flex items-center gap-6">
           <div className="hidden md:flex gap-4 text-neutral-500">
-            <Facebook className="w-4 h-4 hover:text-white cursor-pointer transition-colors" />
-            <Twitter className="w-4 h-4 hover:text-white cursor-pointer transition-colors" />
             <Instagram className="w-4 h-4 hover:text-white cursor-pointer transition-colors" />
           </div>
           <button
-            className="md:hidden text-white"
+            className="lg:hidden text-white"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label="Toggle mobile menu"
           >
@@ -60,9 +63,14 @@ export default function Navbar() {
       {/* Mobile Menu */}
       {mobileOpen && (
         <div className="lg:hidden bg-black/95 border-t border-white/5 px-6 py-6 flex flex-col gap-5 text-sm font-medium tracking-widest text-neutral-400">
-          {['NEWS', 'CLUB', 'TEAMS', 'TICKETS', 'SHOP', 'COMMERCIAL'].map((item) => (
-            <Link key={item} href="#" className="hover:text-white transition-colors" onClick={() => setMobileOpen(false)}>
-              {item}
+          {NAV_LINKS.map(({ label, href }) => (
+            <Link
+              key={label}
+              href={href}
+              className={`hover:text-white transition-colors ${label === 'SHOP' ? 'text-red-500' : ''}`}
+              onClick={() => setMobileOpen(false)}
+            >
+              {label}
             </Link>
           ))}
         </div>

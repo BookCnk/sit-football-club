@@ -2,6 +2,7 @@ import type { Player, NewsArticle, Product, NextMatch, LastResult } from '@/type
 
 // ── SIT Football Club — Logo placeholder (ใช้โลโก้ SIT จริงได้ภายหลัง)
 const SIT_LOGO = '/sit-football.jpg';
+const IT_KMITL_LOGO = '/it-kmitl-football.jpg';
 
 export const NEXT_MATCH: NextMatch = {  
   date: 'SAT 15 MAR',
@@ -22,11 +23,13 @@ export const NEXT_MATCH: NextMatch = {
 export const LAST_RESULT: LastResult = {
   date: 'SAT 08 MAR',
   competition: 'UNI CUP',
-  homeTeam: 'KASETSART',
+  homeTeam: 'IT KMITL',
   awayTeam: 'SIT FC',
+  homeLogo: IT_KMITL_LOGO,
+  awayLogo: SIT_LOGO,
   homeScore: 1,
   awayScore: 1,
-  scorers: 'Thanakorn, Phuwanat (2)',
+  scorers: 'AKARAWIN (11)',
   winner: 'away',
 };
 

@@ -12,7 +12,7 @@ export default function HomePage() {
     <>
       <HeroSection />
       <MatchDataCenter nextMatch={NEXT_MATCH} lastResult={LAST_RESULT} />
-      <NewsGrid articles={NEWS_ARTICLES} />
+      {/* <NewsGrid articles={NEWS_ARTICLES} /> */}
       <SquadSection players={PLAYERS} />
       <HistorySection />
       <ShopSection products={PRODUCTS} />
