@@ -1,59 +1,79 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { ChevronLeft, ChevronRight, Eye, Loader2, PackageSearch, ShieldCheck, Trash2 } from 'lucide-react';
-import { useDeleteOrder, useOrders, useUpdateOrderStatus } from '@/api/features/orders/ordersHooks';
-import type { OrderStatus, ShopOrder } from '@/api/features/orders/ordersTypes';
-import { useAuth } from '@/hooks/useAuth';
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  Loader2,
+  PackageSearch,
+  ShieldCheck,
+  Trash2,
+} from "lucide-react";
+import {
+  useDeleteOrder,
+  useOrders,
+  useUpdateOrderStatus,
+} from "@/api/features/orders/ordersHooks";
+import type { OrderStatus, ShopOrder } from "@/api/features/orders/ordersTypes";
+import { useAuth } from "@/hooks/useAuth";
+import { getErrorMessage, useToast } from "@/hooks/useToast";
+import ConfirmModal from "@/components/ui/ConfirmModal";
+import SystemModal from "@/components/ui/SystemModal";
 
 const PAGE_SIZE = 10;
-const ORDER_STATUSES: OrderStatus[] = ['pending', 'verified', 'completed', 'cancelled'];
+const ORDER_STATUSES: OrderStatus[] = [
+  "pending",
+  "verified",
+  "completed",
+  "cancelled",
+];
 
 function formatDate(date: string) {
   const parsed = new Date(date);
 
   if (Number.isNaN(parsed.getTime())) {
-    return 'Unknown date';
+    return "Unknown date";
   }
 
-  return parsed.toLocaleString('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+  return parsed.toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
 function getStatusClassName(status: string) {
-  if (status === 'completed') {
-    return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-100';
+  if (status === "completed") {
+    return "border-emerald-500/30 bg-emerald-500/10 text-emerald-100";
   }
 
-  if (status === 'verified') {
-    return 'border-sky-500/30 bg-sky-500/10 text-sky-100';
+  if (status === "verified") {
+    return "border-sky-500/30 bg-sky-500/10 text-sky-100";
   }
 
-  if (status === 'cancelled') {
-    return 'border-red-500/30 bg-red-500/10 text-red-100';
+  if (status === "cancelled") {
+    return "border-red-500/30 bg-red-500/10 text-red-100";
   }
 
-  return 'border-amber-500/30 bg-amber-500/10 text-amber-100';
+  return "border-amber-500/30 bg-amber-500/10 text-amber-100";
 }
 
 export default function DashboardOrdersPage() {
   const router = useRouter();
   const { user, loading: authLoading, logout } = useAuth();
+  const toast = useToast();
 
   const [page, setPage] = useState(1);
-  const [statusFilter, setStatusFilter] = useState<'all' | OrderStatus>('all');
-  const [searchInput, setSearchInput] = useState('');
-  const [search, setSearch] = useState('');
-  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(
-    null,
-  );
+  const [statusFilter, setStatusFilter] = useState<"all" | OrderStatus>("all");
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
+  const [orderToDelete, setOrderToDelete] = useState<ShopOrder | null>(null);
+  const [selectedSlip, setSelectedSlip] = useState<string | null>(null);
 
   const ordersQuery = useOrders({
     page,
@@ -68,8 +88,8 @@ export default function DashboardOrdersPage() {
   const pagination = ordersQuery.data?.pagination;
 
   useEffect(() => {
-    if (!authLoading && (!user || user.role !== 'admin')) {
-      router.replace('/login');
+    if (!authLoading && (!user || user.role !== "admin")) {
+      router.replace("/login");
     }
   }, [authLoading, router, user]);
 
@@ -79,45 +99,52 @@ export default function DashboardOrdersPage() {
 
   async function handleLogout() {
     await logout();
-    router.replace('/login');
+    router.replace("/login");
   }
 
   async function handleStatusChange(order: ShopOrder, status: OrderStatus) {
-    setFeedback(null);
-
     try {
       await updateStatus.mutateAsync({ id: order.id, status });
-      setFeedback({
-        type: 'success',
-        message: `Order #${order.id} updated to ${status}.`,
-      });
+      toast.success(
+        `Order #${order.id} updated to ${status}.`,
+        "Order updated",
+      );
     } catch (error) {
-      setFeedback({
-        type: 'error',
-        message: error instanceof Error ? error.message : 'Failed to update order.',
-      });
+      toast.error(
+        getErrorMessage(error, "Failed to update order."),
+        "Update failed",
+      );
     }
   }
 
-  async function handleDelete(order: ShopOrder) {
-    const confirmed = window.confirm(`Delete order #${order.id}? This cannot be undone.`);
-    if (!confirmed) {
+  function requestDelete(order: ShopOrder) {
+    setOrderToDelete(order);
+  }
+
+  function closeDeleteModal() {
+    if (deleteOrder.isPending) {
       return;
     }
 
-    setFeedback(null);
+    setOrderToDelete(null);
+  }
 
+  async function confirmDelete() {
+    if (!orderToDelete) {
+      return;
+    }
+
+    const order = orderToDelete;
     try {
       await deleteOrder.mutateAsync(order.id);
-      setFeedback({
-        type: 'success',
-        message: `Order #${order.id} deleted.`,
-      });
+      toast.success(`Order #${order.id} deleted.`, "Order deleted");
     } catch (error) {
-      setFeedback({
-        type: 'error',
-        message: error instanceof Error ? error.message : 'Failed to delete order.',
-      });
+      toast.error(
+        getErrorMessage(error, "Failed to delete order."),
+        "Delete failed",
+      );
+    } finally {
+      setOrderToDelete(null);
     }
   }
 
@@ -137,7 +164,7 @@ export default function DashboardOrdersPage() {
     );
   }
 
-  if (!user || user.role !== 'admin') {
+  if (!user || user.role !== "admin") {
     return null;
   }
 
@@ -155,11 +182,13 @@ export default function DashboardOrdersPage() {
             </div>
             <h1 className="font-display text-4xl font-semibold tracking-tight md:text-6xl">
               Manage Orders
-              <span className="block text-neutral-500">Review slips and update status</span>
+              <span className="block text-neutral-500">
+                Review slips and update status
+              </span>
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-6 text-neutral-400">
-              Review incoming orders, verify payment slips, and keep order status updated without
-              leaving the admin panel.
+              Review incoming orders, verify payment slips, and keep order
+              status updated without leaving the admin panel.
             </p>
           </div>
 
@@ -169,15 +198,13 @@ export default function DashboardOrdersPage() {
             </div>
             <Link
               href="/dashboard"
-              className="rounded-full border border-white/10 px-4 py-2 text-xs uppercase tracking-widest text-neutral-300 transition-colors hover:border-white/30 hover:text-white"
-            >
+              className="rounded-full border border-white/10 px-4 py-2 text-xs uppercase tracking-widest text-neutral-300 transition-colors hover:border-white/30 hover:text-white">
               Back to Shop Admin
             </Link>
             <button
               type="button"
               onClick={handleLogout}
-              className="rounded-full border border-red-500/30 bg-red-500/10 px-4 py-2 text-xs uppercase tracking-widest text-red-200 transition-colors hover:border-red-400/50 hover:bg-red-500/20"
-            >
+              className="rounded-full border border-red-500/30 bg-red-500/10 px-4 py-2 text-xs uppercase tracking-widest text-red-200 transition-colors hover:border-red-400/50 hover:bg-red-500/20">
               Sign Out
             </button>
           </div>
@@ -186,8 +213,7 @@ export default function DashboardOrdersPage() {
         <div className="mb-8 grid gap-4 lg:grid-cols-[1fr,220px]">
           <form
             onSubmit={applySearch}
-            className="flex flex-col gap-3 rounded-3xl border border-white/10 bg-neutral-950/80 p-5 md:flex-row"
-          >
+            className="flex flex-col gap-3 rounded-3xl border border-white/10 bg-neutral-950/80 p-5 md:flex-row">
             <input
               value={searchInput}
               onChange={(event) => setSearchInput(event.target.value)}
@@ -196,8 +222,7 @@ export default function DashboardOrdersPage() {
             />
             <button
               type="submit"
-              className="rounded-2xl bg-white px-5 py-3 text-xs font-bold uppercase tracking-widest text-black transition-transform hover:scale-[1.01]"
-            >
+              className="rounded-2xl bg-white px-5 py-3 text-xs font-bold uppercase tracking-widest text-black transition-transform hover:scale-[1.01]">
               Search
             </button>
           </form>
@@ -208,9 +233,10 @@ export default function DashboardOrdersPage() {
             </div>
             <select
               value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value as 'all' | OrderStatus)}
-              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-white/30"
-            >
+              onChange={(event) =>
+                setStatusFilter(event.target.value as "all" | OrderStatus)
+              }
+              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-white/30">
               <option value="all">All statuses</option>
               {ORDER_STATUSES.map((status) => (
                 <option key={status} value={status}>
@@ -221,28 +247,20 @@ export default function DashboardOrdersPage() {
           </div>
         </div>
 
-        {feedback && (
-          <div
-            className={`mb-8 rounded-2xl border px-5 py-4 text-sm ${
-              feedback.type === 'success'
-                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-100'
-                : 'border-red-500/30 bg-red-500/10 text-red-100'
-            }`}
-          >
-            {feedback.message}
-          </div>
-        )}
-
         <section className="rounded-3xl border border-white/10 bg-neutral-950/80 p-6 shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
           <div className="mb-6 flex flex-col gap-3 border-b border-white/10 pb-5 md:flex-row md:items-end md:justify-between">
             <div>
-              <div className="text-[10px] uppercase tracking-[0.3em] text-neutral-500">Orders</div>
+              <div className="text-[10px] uppercase tracking-[0.3em] text-neutral-500">
+                Orders
+              </div>
               <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight">
                 Paginated Order Table
               </h2>
             </div>
             <div className="text-sm text-neutral-500">
-              {pagination ? `${pagination.total} total orders` : 'Loading orders...'}
+              {pagination
+                ? `${pagination.total} total orders`
+                : "Loading orders..."}
             </div>
           </div>
 
@@ -253,12 +271,16 @@ export default function DashboardOrdersPage() {
             </div>
           ) : ordersQuery.error ? (
             <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-5 text-sm text-red-100">
-              {ordersQuery.error instanceof Error ? ordersQuery.error.message : 'Failed to load orders.'}
+              {ordersQuery.error instanceof Error
+                ? ordersQuery.error.message
+                : "Failed to load orders."}
             </div>
           ) : orders.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 px-4 py-16 text-center">
               <PackageSearch className="mb-4 h-8 w-8 text-neutral-600" />
-              <div className="text-sm text-neutral-400">No orders found for this filter.</div>
+              <div className="text-sm text-neutral-400">
+                No orders found for this filter.
+              </div>
             </div>
           ) : (
             <>
@@ -280,52 +302,80 @@ export default function DashboardOrdersPage() {
                     {orders.map((order) => (
                       <tr key={order.id} className="bg-white/[0.03]">
                         <td className="rounded-l-2xl border-y border-l border-white/10 px-4 py-4 align-top">
-                          <div className="font-display text-lg font-semibold">#{order.id}</div>
+                          <div className="font-display text-lg font-semibold">
+                            #{order.id}
+                          </div>
                           <div className="mt-1 text-xs uppercase tracking-widest text-neutral-500">
                             THB {Number(order.shopItem.price).toLocaleString()}
                           </div>
                         </td>
                         <td className="border-y border-white/10 px-4 py-4 align-top">
-                          <div className="font-medium text-white">{order.shopItem.name}</div>
+                          <div className="font-medium text-white">
+                            {order.shopItem.name}
+                          </div>
                           <div className="mt-1 text-sm text-neutral-400">
-                            {order.shopItem.subtitle || 'Official Merchandise'}
+                            {order.shopItem.subtitle || "Official Merchandise"}
                           </div>
                         </td>
                         <td className="border-y border-white/10 px-4 py-4 align-top text-sm text-neutral-300">
                           <div>{order.contactPhone}</div>
-                          <div className="mt-1 text-neutral-500">{order.contactEmail}</div>
+                          <div className="mt-1 text-neutral-500">
+                            {order.contactEmail}
+                          </div>
                         </td>
                         <td className="border-y border-white/10 px-4 py-4 align-top text-sm text-neutral-300">
-                          <div>Size: {order.selectedSize || '-'}</div>
-                          <div className="mt-1">Name: {order.screenName || '-'}</div>
-                          <div className="mt-1">Number: {order.screenNumber || '-'}</div>
+                          <div>Size: {order.selectedSize || "-"}</div>
+                          <div className="mt-1">
+                            Name: {order.screenName || "-"}
+                          </div>
+                          <div className="mt-1">
+                            Number: {order.screenNumber || "-"}
+                          </div>
                         </td>
                         <td className="border-y border-white/10 px-4 py-4 align-top">
-                          <a
-                            href={order.slipImageUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-2 text-xs uppercase tracking-widest text-neutral-300 transition-colors hover:border-white/30 hover:text-white"
-                          >
+                          <button
+                            onClick={() => setSelectedSlip(order.slipImageUrl)}
+                            className="inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-2 text-xs uppercase tracking-widest text-neutral-300 transition-colors hover:border-white/30 hover:text-white">
                             <Eye className="h-4 w-4" />
                             View Slip
-                          </a>
+                          </button>
                         </td>
                         <td className="border-y border-white/10 px-4 py-4 align-top">
-                          <select
-                            value={order.status}
-                            onChange={(event) =>
-                              handleStatusChange(order, event.target.value as OrderStatus)
-                            }
-                            disabled={updateStatus.isPending}
-                            className={`rounded-full border px-3 py-2 text-xs uppercase tracking-widest outline-none transition-colors ${getStatusClassName(order.status)}`}
-                          >
-                            {ORDER_STATUSES.map((status) => (
-                              <option key={status} value={status}>
-                                {status}
-                              </option>
-                            ))}
-                          </select>
+                          <div className="relative">
+                            <select
+                              value={order.status}
+                              onChange={(event) =>
+                                handleStatusChange(
+                                  order,
+                                  event.target.value as OrderStatus,
+                                )
+                              }
+                              disabled={updateStatus.isPending}
+                              className={`rounded-full border px-8 py-2 pr-10 text-xs uppercase tracking-widest outline-none transition-colors appearance-none bg-transparent cursor-pointer ${getStatusClassName(order.status)}`}>
+                              {ORDER_STATUSES.map((status) => (
+                                <option
+                                  key={status}
+                                  value={status}
+                                  className="bg-neutral-900 text-white border-none">
+                                  {status}
+                                </option>
+                              ))}
+                            </select>
+                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                              <svg
+                                className="h-3 w-3"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M19 9l-7 7-7-7"
+                                />
+                              </svg>
+                            </div>
+                          </div>
                         </td>
                         <td className="border-y border-white/10 px-4 py-4 align-top text-sm text-neutral-400">
                           {formatDate(order.createdAt)}
@@ -333,10 +383,9 @@ export default function DashboardOrdersPage() {
                         <td className="rounded-r-2xl border-y border-r border-white/10 px-4 py-4 align-top">
                           <button
                             type="button"
-                            onClick={() => handleDelete(order)}
+                            onClick={() => requestDelete(order)}
                             disabled={deleteOrder.isPending}
-                            className="inline-flex items-center gap-2 rounded-full border border-red-500/30 px-3 py-2 text-xs uppercase tracking-widest text-red-200 transition-colors hover:border-red-400/50 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
-                          >
+                            className="inline-flex items-center gap-2 rounded-full border border-red-500/30 px-3 py-2 text-xs uppercase tracking-widest text-red-200 transition-colors hover:border-red-400/50 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50">
                             <Trash2 className="h-4 w-4" />
                             Delete
                           </button>
@@ -354,10 +403,11 @@ export default function DashboardOrdersPage() {
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => setPage((current) => Math.max(1, current - 1))}
+                    onClick={() =>
+                      setPage((current) => Math.max(1, current - 1))
+                    }
                     disabled={!pagination || pagination.page <= 1}
-                    className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-xs uppercase tracking-widest text-neutral-300 transition-colors hover:border-white/30 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
-                  >
+                    className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-xs uppercase tracking-widest text-neutral-300 transition-colors hover:border-white/30 hover:text-white disabled:cursor-not-allowed disabled:opacity-40">
                     <ChevronLeft className="h-4 w-4" />
                     Prev
                   </button>
@@ -365,12 +415,15 @@ export default function DashboardOrdersPage() {
                     type="button"
                     onClick={() =>
                       setPage((current) =>
-                        pagination ? Math.min(pagination.totalPages, current + 1) : current + 1,
+                        pagination
+                          ? Math.min(pagination.totalPages, current + 1)
+                          : current + 1,
                       )
                     }
-                    disabled={!pagination || pagination.page >= pagination.totalPages}
-                    className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-xs uppercase tracking-widest text-neutral-300 transition-colors hover:border-white/30 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
-                  >
+                    disabled={
+                      !pagination || pagination.page >= pagination.totalPages
+                    }
+                    className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-xs uppercase tracking-widest text-neutral-300 transition-colors hover:border-white/30 hover:text-white disabled:cursor-not-allowed disabled:opacity-40">
                     Next
                     <ChevronRight className="h-4 w-4" />
                   </button>
@@ -380,6 +433,53 @@ export default function DashboardOrdersPage() {
           )}
         </section>
       </section>
+
+      <ConfirmModal
+        open={Boolean(orderToDelete)}
+        title="Delete Order"
+        message={
+          orderToDelete
+            ? `Delete order #${orderToDelete.id}? This action cannot be undone.`
+            : "Delete this order? This action cannot be undone."
+        }
+        confirmLabel="Delete Order"
+        cancelLabel="Keep Order"
+        danger
+        loading={deleteOrder.isPending}
+        onCancel={closeDeleteModal}
+        onConfirm={confirmDelete}
+      />
+
+      <SystemModal
+        open={Boolean(selectedSlip)}
+        onClose={() => setSelectedSlip(null)}
+        title="Payment Slip"
+        description="Review the uploaded transfer slip before approving the order."
+        maxWidthClassName="max-w-4xl"
+      >
+        {selectedSlip && (
+          <div>
+            <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/40 p-2">
+              <img
+                src={selectedSlip}
+                alt="Payment slip"
+                className="max-h-[72vh] w-full rounded-xl object-contain"
+              />
+            </div>
+            <div className="mt-4 flex justify-end">
+              <a
+                href={selectedSlip}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-xs font-bold uppercase tracking-widest text-neutral-300 transition-colors hover:border-white/30 hover:text-white"
+              >
+                <Eye className="h-4 w-4" />
+                Open In New Tab
+              </a>
+            </div>
+          </div>
+        )}
+      </SystemModal>
     </div>
   );
 }

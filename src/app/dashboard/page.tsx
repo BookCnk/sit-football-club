@@ -13,6 +13,8 @@ import {
 } from '@/api/features/shop-items/shopItemsHooks';
 import type { CreateShopItemInput, ShopItem } from '@/api/features/shop-items/shopItemsTypes';
 import { useAuth } from '@/hooks/useAuth';
+import { getErrorMessage, useToast } from '@/hooks/useToast';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 
 type ShopItemFormState = {
   name: string;
@@ -139,16 +141,15 @@ function formatDate(date: string) {
 export default function DashboardPage() {
   const router = useRouter();
   const { user, loading: authLoading, logout } = useAuth();
+  const toast = useToast();
   const { data, isLoading, error } = useShopItems();
   const createItem = useCreateShopItem();
   const updateItem = useUpdateShopItem();
   const deleteItem = useDeleteShopItem();
 
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<ShopItem | null>(null);
   const [form, setForm] = useState<ShopItemFormState>(EMPTY_FORM);
-  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(
-    null,
-  );
 
   const items = Array.isArray(data) ? data : [];
   const selectedItem = items.find((item) => item.id === selectedId) ?? null;
@@ -179,13 +180,11 @@ export default function DashboardPage() {
   function resetForm() {
     setSelectedId(null);
     setForm(EMPTY_FORM);
-    setFeedback(null);
   }
 
   function handleEdit(item: ShopItem) {
     setSelectedId(item.id);
     setForm(toFormState(item));
-    setFeedback(null);
   }
 
   function handleChange(field: keyof ShopItemFormState, value: string) {
@@ -202,7 +201,6 @@ export default function DashboardPage() {
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setFeedback(null);
 
     const name = form.name.trim();
     const description = form.description.trim();
@@ -211,10 +209,7 @@ export default function DashboardPage() {
     const sizes = parseStringList(form.sizesText);
 
     if (!name || !description || Number.isNaN(price) || price < 0 || images.length === 0) {
-      setFeedback({
-        type: 'error',
-        message: 'Name, price, description, and at least one image are required.',
-      });
+      toast.error('Name, price, description, and at least one image are required.', 'Validation error');
       return;
     }
 
@@ -237,26 +232,30 @@ export default function DashboardPage() {
 
       setSelectedId(savedItem.id);
       setForm(toFormState(savedItem));
-      setFeedback({
-        type: 'success',
-        message: selectedId ? 'Shop item updated.' : 'Shop item created.',
-      });
+      toast.success(selectedId ? 'Shop item updated.' : 'Shop item created.', 'Shop saved');
     } catch (submitError) {
-      setFeedback({
-        type: 'error',
-        message: submitError instanceof Error ? submitError.message : 'Failed to save shop item.',
-      });
+      toast.error(getErrorMessage(submitError, 'Failed to save shop item.'), 'Save failed');
     }
   }
 
-  async function handleDelete(item: ShopItem) {
-    const confirmed = window.confirm(`Delete "${item.name}"? This cannot be undone.`);
-    if (!confirmed) {
+  function requestDelete(item: ShopItem) {
+    setItemToDelete(item);
+  }
+
+  function closeDeleteModal() {
+    if (deleteItem.isPending) {
       return;
     }
 
-    setFeedback(null);
+    setItemToDelete(null);
+  }
 
+  async function confirmDelete() {
+    if (!itemToDelete) {
+      return;
+    }
+
+    const item = itemToDelete;
     try {
       await deleteItem.mutateAsync(item.id);
 
@@ -264,15 +263,11 @@ export default function DashboardPage() {
         resetForm();
       }
 
-      setFeedback({
-        type: 'success',
-        message: `Deleted "${item.name}".`,
-      });
+      toast.success(`Deleted "${item.name}".`, 'Item deleted');
     } catch (deleteError) {
-      setFeedback({
-        type: 'error',
-        message: deleteError instanceof Error ? deleteError.message : 'Failed to delete shop item.',
-      });
+      toast.error(getErrorMessage(deleteError, 'Failed to delete shop item.'), 'Delete failed');
+    } finally {
+      setItemToDelete(null);
     }
   }
 
@@ -359,18 +354,6 @@ export default function DashboardPage() {
             <div className="font-display text-3xl font-semibold">{merchCount}</div>
           </div>
         </div>
-
-        {feedback && (
-          <div
-            className={`mb-8 rounded-2xl border px-5 py-4 text-sm ${
-              feedback.type === 'success'
-                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-100'
-                : 'border-red-500/30 bg-red-500/10 text-red-100'
-            }`}
-          >
-            {feedback.message}
-          </div>
-        )}
 
         <div className="grid gap-8 xl:grid-cols-[1.05fr,1.35fr]">
           <section className="rounded-3xl border border-white/10 bg-neutral-950/80 p-6 shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
@@ -469,7 +452,7 @@ export default function DashboardPage() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleDelete(item)}
+                          onClick={() => requestDelete(item)}
                           disabled={deleteItem.isPending}
                           className="inline-flex items-center gap-2 rounded-full border border-red-500/30 px-4 py-2 text-xs uppercase tracking-widest text-red-200 transition-colors hover:border-red-400/50 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
                         >
@@ -682,6 +665,22 @@ export default function DashboardPage() {
           </section>
         </div>
       </section>
+
+      <ConfirmModal
+        open={Boolean(itemToDelete)}
+        title="Delete Shop Item"
+        message={
+          itemToDelete
+            ? `Delete "${itemToDelete.name}"? This action cannot be undone.`
+            : 'Delete this item? This action cannot be undone.'
+        }
+        confirmLabel="Delete Item"
+        cancelLabel="Keep Item"
+        danger
+        loading={deleteItem.isPending}
+        onCancel={closeDeleteModal}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

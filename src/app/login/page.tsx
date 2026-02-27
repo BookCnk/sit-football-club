@@ -4,24 +4,24 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLogin } from "@/api/features/auth/authHooks";
+import { useToast } from "@/hooks/useToast";
 
 export default function LoginPage() {
   const router = useRouter();
   const login = useLogin();
+  const toast = useToast();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [remember, setRemember] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const canSubmit = useMemo(() => {
     return email.trim().length > 3 && password.length >= 6 && !login.isPending;
   }, [email, password, login.isPending]);
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
+  async function onSubmit(event: React.FormEvent) {
+    event.preventDefault();
 
     try {
       const response = await login.mutateAsync({
@@ -29,66 +29,68 @@ export default function LoginPage() {
         password,
       });
 
-      // ✅ cookie token ถูก set โดย backend แล้ว (httpOnly)
+      toast.success(
+        response.user.role === "admin"
+          ? "Signed in. Redirecting to the admin dashboard."
+          : "Signed in successfully.",
+        "Login successful",
+      );
+
       router.replace(response.redirectTo || (response.user.role === "admin" ? "/dashboard" : "/"));
-    } catch (err: any) {
-      setError(err?.message || "ล็อกอินไม่สำเร็จ ลองใหม่อีกครั้ง");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Login failed. Please try again.",
+        "Login failed",
+      );
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#030303] to-[#0a0a0a] flex items-center justify-center px-6 py-16">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-[#030303] to-[#0a0a0a] px-6 py-16">
       <div className="fixed inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:100px_100px] [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_100%)] pointer-events-none" />
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_at_top,rgba(220,38,38,0.14),transparent_60%)]" />
 
-      <div className="w-full max-w-md relative z-10">
+      <div className="relative z-10 w-full max-w-md">
         <div className="mb-6 text-center">
-          <span className="text-[10px] font-mono text-red-500 tracking-widest uppercase block mb-2">
+          <span className="mb-2 block font-mono text-[10px] uppercase tracking-widest text-red-500">
             [ MEMBER ACCESS ]
           </span>
-          <h1 className="text-4xl font-display font-semibold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white to-neutral-500">
+          <h1 className="bg-gradient-to-b from-white to-neutral-500 bg-clip-text text-4xl font-display font-semibold tracking-tighter text-transparent">
             LOGIN
           </h1>
           <p className="mt-2 text-xs text-neutral-500">
-            เข้าสู่ระบบเพื่อดูสิทธิพิเศษและจัดการคำสั่งซื้อ
+            Sign in to access the admin area and manage club shop activity.
           </p>
         </div>
 
-        <div className="bg-neutral-900/60 border border-white/10 rounded-lg overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.6)]">
-          <div className="px-6 py-5 border-b border-white/10 flex items-center justify-between">
+        <div className="overflow-hidden rounded-lg border border-white/10 bg-neutral-900/60 shadow-[0_20px_60px_rgba(0,0,0,0.6)]">
+          <div className="flex items-center justify-between border-b border-white/10 px-6 py-5">
             <div>
-              <div className="text-xs text-neutral-500 uppercase tracking-widest">
-                Welcome back
-              </div>
-              <div className="font-display font-semibold text-lg tracking-tight text-white">
+              <div className="text-xs uppercase tracking-widest text-neutral-500">Welcome back</div>
+              <div className="text-lg font-display font-semibold tracking-tight text-white">
                 Sign in
               </div>
             </div>
             <Link
               href="/"
-              className="text-[10px] uppercase tracking-widest text-neutral-600 hover:text-white transition-colors">
+              className="text-[10px] uppercase tracking-widest text-neutral-600 transition-colors hover:text-white"
+            >
               SIT FC
             </Link>
           </div>
 
-          <form onSubmit={onSubmit} className="p-6 space-y-5">
-            {error && (
-              <div className="border border-red-500/30 bg-red-500/10 text-red-200 text-sm rounded-md px-4 py-3">
-                {error}
-              </div>
-            )}
-
+          <form onSubmit={onSubmit} className="space-y-5 p-6">
             <div className="space-y-2">
               <label className="text-[10px] uppercase tracking-widest text-neutral-500">
                 Email
               </label>
               <input
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(event) => setEmail(event.target.value)}
                 placeholder="you@example.com"
                 type="email"
                 autoComplete="email"
-                className="w-full bg-[#0a0a0a] border border-white/10 focus:border-white/30 outline-none rounded-sm px-4 py-3 text-sm text-white placeholder:text-neutral-600 transition-colors"
+                className="w-full rounded-sm border border-white/10 bg-[#0a0a0a] px-4 py-3 text-sm text-white outline-none transition-colors placeholder:text-neutral-600 focus:border-white/30"
               />
             </div>
 
@@ -100,26 +102,27 @@ export default function LoginPage() {
               <div className="relative">
                 <input
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(event) => setPassword(event.target.value)}
                   placeholder="••••••••"
                   type={showPass ? "text" : "password"}
                   autoComplete="current-password"
-                  className="w-full bg-[#0a0a0a] border border-white/10 focus:border-white/30 outline-none rounded-sm px-4 py-3 pr-12 text-sm text-white placeholder:text-neutral-600 transition-colors"
+                  className="w-full rounded-sm border border-white/10 bg-[#0a0a0a] px-4 py-3 pr-12 text-sm text-white outline-none transition-colors placeholder:text-neutral-600 focus:border-white/30"
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPass((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] uppercase tracking-widest text-neutral-500 hover:text-white transition-colors">
+                  onClick={() => setShowPass((current) => !current)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] uppercase tracking-widest text-neutral-500 transition-colors hover:text-white"
+                >
                   {showPass ? "Hide" : "Show"}
                 </button>
               </div>
 
               <div className="flex items-center justify-between pt-1">
-                <label className="flex items-center gap-2 text-xs text-neutral-500 select-none">
+                <label className="flex select-none items-center gap-2 text-xs text-neutral-500">
                   <input
                     type="checkbox"
                     checked={remember}
-                    onChange={(e) => setRemember(e.target.checked)}
+                    onChange={(event) => setRemember(event.target.checked)}
                     className="accent-red-600"
                   />
                   Remember me
@@ -127,42 +130,45 @@ export default function LoginPage() {
 
                 <Link
                   href="/forgot-password"
-                  className="text-xs text-neutral-500 hover:text-white transition-colors">
+                  className="text-xs text-neutral-500 transition-colors hover:text-white"
+                >
                   Forgot password?
                 </Link>
               </div>
             </div>
 
-            <div className="pt-2 space-y-3">
+            <div className="space-y-3 pt-2">
               <button
                 type="submit"
                 disabled={!canSubmit}
-                className={`w-full py-3 text-[11px] font-bold uppercase tracking-widest transition-all duration-200 rounded-sm ${
+                className={`w-full rounded-sm py-3 text-[11px] font-bold uppercase tracking-widest transition-all duration-200 ${
                   canSubmit
-                    ? "bg-white text-black hover:bg-neutral-200 hover:scale-[1.01] active:scale-95"
-                    : "bg-white/10 text-neutral-500 cursor-not-allowed"
-                }`}>
+                    ? "bg-white text-black hover:scale-[1.01] hover:bg-neutral-200 active:scale-95"
+                    : "cursor-not-allowed bg-white/10 text-neutral-500"
+                }`}
+              >
                 {login.isPending ? "Signing in..." : "Sign In"}
               </button>
 
-              <p className="text-[11px] text-neutral-600 text-center">
-                ยังไม่มีบัญชี?{" "}
+              <p className="text-center text-[11px] text-neutral-600">
+                No account yet?{" "}
                 <Link
                   href="/register"
-                  className="text-neutral-300 hover:text-white underline underline-offset-4">
-                  สมัครสมาชิก
+                  className="text-neutral-300 underline underline-offset-4 hover:text-white"
+                >
+                  Register
                 </Link>
               </p>
 
-              <p className="text-[9px] text-neutral-700 text-center uppercase tracking-widest">
+              <p className="text-center text-[9px] uppercase tracking-widest text-neutral-700">
                 By continuing, you agree to our Terms & Privacy
               </p>
             </div>
           </form>
         </div>
 
-        <div className="mt-4 text-[10px] text-neutral-600 uppercase tracking-widest text-center">
-          Tip: Password อย่างน้อย 6 ตัวอักษร
+        <div className="mt-4 text-center text-[10px] uppercase tracking-widest text-neutral-600">
+          Tip: Password should be at least 6 characters.
         </div>
       </div>
     </div>

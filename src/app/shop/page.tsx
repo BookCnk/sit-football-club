@@ -73,7 +73,61 @@ function getBadge(badge: unknown): string | null {
   return null;
 }
 
-// ── Product Card ─────────────────────────────────────────────────────────────
+// ── Skeleton Components ───────────────────────────────────────────────────────────
+function ProductCardSkeleton() {
+  return (
+    <div className="bg-neutral-900/60 border border-white/5 rounded-lg overflow-hidden flex flex-col animate-pulse">
+      {/* Image skeleton */}
+      <div className="aspect-square bg-neutral-800 relative">
+        <div className="absolute inset-0 bg-gradient-to-br from-neutral-800 to-neutral-900" />
+        {/* Badge skeleton */}
+        <div className="absolute top-3 left-3 w-12 h-5 bg-neutral-700 rounded" />
+      </div>
+
+      {/* Info skeleton */}
+      <div className="p-5 flex flex-col flex-1">
+        {/* Subtitle skeleton */}
+        <div className="h-3 bg-neutral-800 rounded w-20 mb-2" />
+
+        {/* Title skeleton */}
+        <div className="h-4 bg-neutral-700 rounded w-3/4 mb-3" />
+
+        {/* Description skeleton */}
+        <div className="flex-1 space-y-2 mb-4">
+          <div className="h-3 bg-neutral-800 rounded" />
+          <div className="h-3 bg-neutral-800 rounded w-5/6" />
+          <div className="h-3 bg-neutral-800 rounded w-4/6" />
+        </div>
+
+        {/* Size picker skeleton */}
+        <div className="mb-4">
+          <div className="h-2 bg-neutral-800 rounded w-8 mb-2" />
+          <div className="flex gap-1.5">
+            <div className="w-8 h-8 bg-neutral-800 rounded" />
+            <div className="w-8 h-8 bg-neutral-800 rounded" />
+            <div className="w-8 h-8 bg-neutral-800 rounded" />
+          </div>
+        </div>
+
+        {/* Price and button skeleton */}
+        <div className="flex items-center justify-between pt-4 border-t border-white/5">
+          <div className="h-5 bg-neutral-700 rounded w-16" />
+          <div className="h-8 bg-neutral-700 rounded w-20" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ShopPageSkeleton() {
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+      {Array.from({ length: 8 }).map((_, i) => (
+        <ProductCardSkeleton key={i} />
+      ))}
+    </div>
+  );
+}
 function ProductCard({
   item,
   onAddToCart,
@@ -412,13 +466,25 @@ export default function ShopPage() {
 
         <section className="max-w-7xl mx-auto px-6 pb-32 relative z-10">
           {isLoading ? (
-            <div className="text-neutral-500 text-sm">Loading products…</div>
+            <ShopPageSkeleton />
           ) : error ? (
-            <div className="text-red-500 text-sm">
-              {(error as Error).message}
+            <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-6 text-center">
+              <div className="text-red-200 text-sm mb-2">
+                Failed to load products
+              </div>
+              <div className="text-red-400 text-xs">
+                {(error as Error).message}
+              </div>
             </div>
           ) : filtered.length === 0 ? (
-            <div className="text-neutral-500 text-sm">No products found.</div>
+            <div className="text-center py-16">
+              <div className="text-neutral-500 text-sm mb-2">
+                No products found
+              </div>
+              <div className="text-neutral-600 text-xs">
+                Try adjusting your filters
+              </div>
+            </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
               {filtered.map((item) => (

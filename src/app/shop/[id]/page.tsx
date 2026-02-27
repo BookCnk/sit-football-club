@@ -7,6 +7,7 @@ import { useParams } from 'next/navigation';
 import { ChevronDown, ChevronRight, Loader2, UploadCloud } from 'lucide-react';
 import { useShopItem } from '@/api/features/shop-items/shopItemsHooks';
 import type { ShopItem } from '@/api/features/shop-items/shopItemsTypes';
+import { getErrorMessage, useToast } from '@/hooks/useToast';
 
 const MAX_SLIP_SIZE_MB = 5;
 
@@ -117,6 +118,7 @@ export default function ProductDetailPage() {
   const itemId = Number(params?.id);
   const validItemId = Number.isInteger(itemId) && itemId > 0 ? itemId : '';
   const { data, isLoading, error } = useShopItem(validItemId);
+  const toast = useToast();
 
   const [activeImg, setActiveImg] = useState(0);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
@@ -126,8 +128,6 @@ export default function ProductDetailPage() {
   const [screenNumber, setScreenNumber] = useState('');
   const [slipFile, setSlipFile] = useState<File | null>(null);
   const [slipPreviewUrl, setSlipPreviewUrl] = useState<string | null>(null);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const item = data ? normalizeItem(data) : null;
@@ -145,8 +145,6 @@ export default function ProductDetailPage() {
     setScreenNumber('');
     setSlipFile(null);
     setSlipPreviewUrl(null);
-    setSubmitError(null);
-    setSubmitSuccess(null);
   }, [item?.id]);
 
   useEffect(() => {
@@ -195,41 +193,39 @@ export default function ProductDetailPage() {
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setSubmitError(null);
-    setSubmitSuccess(null);
 
     if (!item) {
-      setSubmitError('Product data is unavailable.');
+      toast.error('Product data is unavailable.', 'Order failed');
       return;
     }
 
     if (!contactPhone.trim()) {
-      setSubmitError('Please enter a contact phone number.');
+      toast.error('Please enter a contact phone number.', 'Validation error');
       return;
     }
 
     if (!contactEmail.trim() || !contactEmail.includes('@')) {
-      setSubmitError('Please enter a valid contact email.');
+      toast.error('Please enter a valid contact email.', 'Validation error');
       return;
     }
 
     if (item.sizes && !selectedSize) {
-      setSubmitError('Please select a size before placing the order.');
+      toast.error('Please select a size before placing the order.', 'Validation error');
       return;
     }
 
     if (!slipFile) {
-      setSubmitError('Please upload a payment slip image.');
+      toast.error('Please upload a payment slip image.', 'Validation error');
       return;
     }
 
     if (!slipFile.type.startsWith('image/')) {
-      setSubmitError('Slip upload must be an image file.');
+      toast.error('Slip upload must be an image file.', 'Validation error');
       return;
     }
 
     if (slipFile.size > MAX_SLIP_SIZE_MB * 1024 * 1024) {
-      setSubmitError(`Slip image must be ${MAX_SLIP_SIZE_MB}MB or smaller.`);
+      toast.error(`Slip image must be ${MAX_SLIP_SIZE_MB}MB or smaller.`, 'Validation error');
       return;
     }
 
@@ -256,8 +252,9 @@ export default function ProductDetailPage() {
         throw new Error(payload?.error || 'Failed to submit order.');
       }
 
-      setSubmitSuccess(
-        `Order submitted successfully. Reference #${payload.order.id}. We will review your slip and contact you soon.`,
+      toast.success(
+        `Reference #${payload.order.id}. We will review your slip and contact you soon.`,
+        'Order submitted',
       );
       setContactPhone('');
       setContactEmail('');
@@ -265,9 +262,7 @@ export default function ProductDetailPage() {
       setScreenNumber('');
       setSlipFile(null);
     } catch (submitErrorValue) {
-      setSubmitError(
-        submitErrorValue instanceof Error ? submitErrorValue.message : 'Failed to submit order.',
-      );
+      toast.error(getErrorMessage(submitErrorValue, 'Failed to submit order.'), 'Order failed');
     } finally {
       setIsSubmitting(false);
     }
@@ -363,18 +358,6 @@ export default function ProductDetailPage() {
               Submit your order details and upload the payment slip here. Once the slip is verified,
               the club team will contact you through the phone number or email you provide.
             </p>
-
-            {submitError && (
-              <div className="mb-5 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-100">
-                {submitError}
-              </div>
-            )}
-
-            {submitSuccess && (
-              <div className="mb-5 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
-                {submitSuccess}
-              </div>
-            )}
 
             <form onSubmit={handleSubmit} className="mb-10 space-y-5 rounded-3xl border border-white/10 bg-white/[0.03] p-5">
               {item.sizes && (

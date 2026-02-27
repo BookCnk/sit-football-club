@@ -131,3 +131,24 @@ h1, h2, h3, h4, .font-display {
 .animate-slide-in-left  { animation: slideInLeft  0.9s ease-out both; }
 .animate-slide-in-right { animation: slideInRight 0.9s ease-out both; }
 
+@keyframes systemAlertIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes systemAlertProgress {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
+.system-alert-progress {
+  animation-name: systemAlertProgress;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+@keyframes systemModalIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
