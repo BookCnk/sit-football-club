@@ -1,116 +1,110 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ChevronRight, ChevronDown } from 'lucide-react';
+import { useParams } from 'next/navigation';
+import { ChevronDown, ChevronRight, Loader2, UploadCloud } from 'lucide-react';
+import { useShopItem } from '@/api/features/shop-items/shopItemsHooks';
+import type { ShopItem } from '@/api/features/shop-items/shopItemsTypes';
 
-// ── Product data (shared with shop page) ─────────────────────────────────────
-const SHOP_ITEMS = [
-  {
-    id: 1,
-    name: 'SIT FC Home Kit 2025',
-    subtitle: 'Official Match Jersey',
-    price: 850,
-    badge: 'PRE-ORDER',
-    images: [
-      'https://htfc.co.uk/wp-content/uploads/2025/02/Body-Warmer.png',
-      'https://htfc.co.uk/wp-content/uploads/2025/10/thepitmen-jumper.webp',
-      'https://htfc.co.uk/wp-content/uploads/2025/02/Body-Warmer.png',
-      'https://htfc.co.uk/wp-content/uploads/2025/02/Body-Warmer.png',
-    ],
-    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
-    description: 'เสื้อเหย้าอย่างเป็นทางการของ SIT Football Club ฤดูกาล 2025 ผลิตจากผ้าโพลีเอสเตอร์คุณภาพสูง ระบายอากาศดี เหมาะสำหรับการแข่งขันและสวมใส่ในชีวิตประจำวัน มีตราสโมสร SIT FC ปักที่หน้าอก',
-    payment: 'ชำระผ่าน PromptPay / Bank Transfer\nบัญชี: SIT Football Club\nธ.กสิกรไทย เลขที่: 000-0-00000-0\nหลังโอนส่งสลิปมาที่ LINE: @sitfc',
-    shipping: 'จัดส่งภายใน 3-5 วันทำการหลังยืนยันการชำระเงิน\nจัดส่งผ่าน Kerry Express ทั่วไทย\nรับด้วยตนเองได้ที่คณะ SIT อาคาร IT โดยไม่มีค่าใช้จ่าย',
-  },
-  {
-    id: 2,
-    name: 'SIT FC Away Kit 2025',
-    subtitle: 'Official Away Jersey',
-    price: 850,
-    badge: 'PRE-ORDER',
-    images: [
-      'https://htfc.co.uk/wp-content/uploads/2025/10/thepitmen-jumper.webp',
-      'https://htfc.co.uk/wp-content/uploads/2025/02/Body-Warmer.png',
-      'https://htfc.co.uk/wp-content/uploads/2025/10/thepitmen-jumper.webp',
-      'https://htfc.co.uk/wp-content/uploads/2025/10/thepitmen-jumper.webp',
-    ],
-    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
-    description: 'เสื้อเยือนอย่างเป็นทางการ ฤดูกาล 2025 โดดเด่นด้วยดีไซน์สีขาว-แดง สไตล์ KMUTT',
-    payment: 'ชำระผ่าน PromptPay / Bank Transfer\nบัญชี: SIT Football Club\nธ.กสิกรไทย เลขที่: 000-0-00000-0',
-    shipping: 'จัดส่งภายใน 3-5 วันทำการ\nจัดส่งผ่าน Kerry Express ทั่วไทย',
-  },
-  {
-    id: 3,
-    name: "'We Are SIT' Hoodie",
-    subtitle: 'Premium Supporter Wear',
-    price: 950,
-    badge: null,
-    images: [
-      'https://htfc.co.uk/wp-content/uploads/2025/10/thepitmen-jumper.webp',
-      'https://htfc.co.uk/wp-content/uploads/2025/10/thepitmen-jumper.webp',
-    ],
-    sizes: ['S', 'M', 'L', 'XL'],
-    description: 'ฮู้ดดี้คุณภาพพรีเมี่ยม สกรีนตราสโมสรด้านหน้า ผ้าหนา นุ่ม ใส่อุ่น',
-    payment: 'ชำระผ่าน PromptPay / Bank Transfer',
-    shipping: 'จัดส่งภายใน 3-5 วันทำการ',
-  },
-  {
-    id: 4,
-    name: 'Training Jersey 2025',
-    subtitle: 'Player Edition',
-    price: 650,
-    badge: 'LIMITED',
-    images: [
-      'https://htfc.co.uk/wp-content/uploads/2025/02/Body-Warmer.png',
-      'https://htfc.co.uk/wp-content/uploads/2025/02/Body-Warmer.png',
-    ],
-    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
-    description: 'เสื้อฝึกซ้อมรุ่น Player Edition เหมือนที่นักเตะสวมใส่จริงในการซ้อม',
-    payment: 'ชำระผ่าน PromptPay / Bank Transfer',
-    shipping: 'จัดส่งภายใน 3-5 วันทำการ',
-  },
-  {
-    id: 5,
-    name: 'SIT FC Black Pen',
-    subtitle: 'Official Merchandise',
-    price: 50,
-    badge: null,
-    images: ['https://htfc.co.uk/wp-content/uploads/2025/02/Pen.jpg'],
-    sizes: null,
-    description: 'ปากกาโลโก้ SIT FC สีดำ ของที่ระลึกอย่างเป็นทางการ',
-    payment: 'ชำระผ่าน PromptPay / Bank Transfer',
-    shipping: 'จัดส่งภายใน 3-5 วันทำการ',
-  },
-  {
-    id: 6,
-    name: 'Club Pin Badge',
-    subtitle: "Collector's Item",
-    price: 120,
-    badge: null,
-    images: ['https://htfc.co.uk/wp-content/uploads/2025/02/Wooden-Circle-Keyring.jpg'],
-    sizes: null,
-    description: 'เข็มกลัดโลโก้สโมสร งานแฮนด์เมดสำหรับนักสะสม',
-    payment: 'ชำระผ่าน PromptPay / Bank Transfer',
-    shipping: 'จัดส่งภายใน 3-5 วันทำการ',
-  },
-];
+const MAX_SLIP_SIZE_MB = 5;
 
-// ── Accordion item ─────────────────────────────────────────────────────────────
+function isSafeImageSrc(value: string) {
+  return value.startsWith('/') || value.startsWith('http://') || value.startsWith('https://');
+}
+
+function getImageUrls(images: unknown) {
+  if (typeof images === 'string' && images.trim()) {
+    const value = images.trim();
+    return isSafeImageSrc(value) ? [value] : ['/placeholder.png'];
+  }
+
+  if (Array.isArray(images)) {
+    const urls = images
+      .map((entry) => {
+        if (typeof entry === 'string') {
+          const value = entry.trim();
+          return isSafeImageSrc(value) ? value : '';
+        }
+
+        if (typeof entry === 'object' && entry && 'url' in entry) {
+          const url = (entry as { url?: unknown }).url;
+          if (typeof url === 'string') {
+            const value = url.trim();
+            return isSafeImageSrc(value) ? value : '';
+          }
+        }
+
+        return '';
+      })
+      .filter(Boolean);
+
+    return urls.length > 0 ? urls : ['/placeholder.png'];
+  }
+
+  if (typeof images === 'object' && images && 'url' in images) {
+    const url = (images as { url?: unknown }).url;
+    if (typeof url === 'string' && url.trim()) {
+      const value = url.trim();
+      return isSafeImageSrc(value) ? [value] : ['/placeholder.png'];
+    }
+  }
+
+  return ['/placeholder.png'];
+}
+
+function getSizes(sizes: unknown) {
+  if (!Array.isArray(sizes)) {
+    return null;
+  }
+
+  const values = sizes
+    .map((entry) => (typeof entry === 'string' ? entry.trim() : ''))
+    .filter(Boolean);
+
+  return values.length > 0 ? values : null;
+}
+
+function getBadge(badge: unknown) {
+  return typeof badge === 'string' && badge.trim() ? badge.trim() : null;
+}
+
+function getText(value: unknown, fallback = 'Contact club admin for details.') {
+  return typeof value === 'string' && value.trim() ? value : fallback;
+}
+
+function normalizeItem(item: ShopItem) {
+  return {
+    id: item.id,
+    name: item.name,
+    subtitle: item.subtitle?.trim() || 'Official Merchandise',
+    price: Number(item.price),
+    badge: getBadge(item.badge),
+    images: getImageUrls(item.images),
+    sizes: getSizes(item.sizes),
+    description: item.description,
+    payment: getText(item.payment, 'Contact club admin for payment details.'),
+    shipping: getText(item.shipping, 'Contact club admin for shipping details.'),
+  };
+}
+
 function Accordion({ title, children }: { title: string; children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
+
   return (
     <div className="border-t border-white/10">
       <button
-        onClick={() => setOpen((p) => !p)}
-        className="w-full flex justify-between items-center py-4 text-[11px] uppercase tracking-widest font-bold text-neutral-300 hover:text-white transition-colors"
+        onClick={() => setOpen((current) => !current)}
+        className="flex w-full items-center justify-between py-4 text-[11px] font-bold uppercase tracking-widest text-neutral-300 transition-colors hover:text-white"
       >
         {title}
-        <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown
+          className={`h-4 w-4 transition-transform duration-300 ${open ? 'rotate-180' : ''}`}
+        />
       </button>
       {open && (
-        <div className="pb-5 text-[12px] text-neutral-400 leading-relaxed whitespace-pre-line">
+        <div className="whitespace-pre-line pb-5 text-[12px] leading-relaxed text-neutral-400">
           {children}
         </div>
       )}
@@ -118,83 +112,226 @@ function Accordion({ title, children }: { title: string; children: React.ReactNo
   );
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
-export default function ProductDetailPage({ params }: { params: { id: string } }) {
-  const item = SHOP_ITEMS.find((p) => p.id === Number(params.id));
+export default function ProductDetailPage() {
+  const params = useParams<{ id: string }>();
+  const itemId = Number(params?.id);
+  const validItemId = Number.isInteger(itemId) && itemId > 0 ? itemId : '';
+  const { data, isLoading, error } = useShopItem(validItemId);
 
   const [activeImg, setActiveImg] = useState(0);
-  const [selectedSize, setSelectedSize] = useState<string | null>(item?.sizes?.[1] ?? null);
-  const [printName, setPrintName] = useState('NO SCREEN');
-  const [added, setAdded] = useState(false);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [contactPhone, setContactPhone] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [screenName, setScreenName] = useState('');
+  const [screenNumber, setScreenNumber] = useState('');
+  const [slipFile, setSlipFile] = useState<File | null>(null);
+  const [slipPreviewUrl, setSlipPreviewUrl] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  if (!item) {
+  const item = data ? normalizeItem(data) : null;
+
+  useEffect(() => {
+    if (!item) {
+      return;
+    }
+
+    setActiveImg(0);
+    setSelectedSize(item.sizes?.[0] ?? null);
+    setContactPhone('');
+    setContactEmail('');
+    setScreenName('');
+    setScreenNumber('');
+    setSlipFile(null);
+    setSlipPreviewUrl(null);
+    setSubmitError(null);
+    setSubmitSuccess(null);
+  }, [item?.id]);
+
+  useEffect(() => {
+    if (!slipFile) {
+      setSlipPreviewUrl(null);
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(slipFile);
+    setSlipPreviewUrl(objectUrl);
+
+    return () => {
+      URL.revokeObjectURL(objectUrl);
+    };
+  }, [slipFile]);
+
+  if (!validItemId) {
     return (
-      <div className="min-h-screen bg-[#030303] flex items-center justify-center text-neutral-500 text-sm">
-        Product not found.{' '}
-        <Link href="/shop" className="text-red-500 ml-2 underline">Back to Shop</Link>
+      <div className="flex min-h-screen items-center justify-center bg-[#030303] px-6 text-sm text-neutral-500">
+        Invalid product.
+        <Link href="/shop" className="ml-2 text-red-500 underline">
+          Back to Shop
+        </Link>
       </div>
     );
   }
 
-  const handleAdd = () => {
-    setAdded(true);
-    setTimeout(() => setAdded(false), 2000);
-  };
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#030303] px-6 text-sm text-neutral-400">
+        Loading product...
+      </div>
+    );
+  }
+
+  if (error || !item) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#030303] px-6 text-sm text-neutral-500">
+        Product not found.
+        <Link href="/shop" className="ml-2 text-red-500 underline">
+          Back to Shop
+        </Link>
+      </div>
+    );
+  }
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSubmitError(null);
+    setSubmitSuccess(null);
+
+    if (!item) {
+      setSubmitError('Product data is unavailable.');
+      return;
+    }
+
+    if (!contactPhone.trim()) {
+      setSubmitError('Please enter a contact phone number.');
+      return;
+    }
+
+    if (!contactEmail.trim() || !contactEmail.includes('@')) {
+      setSubmitError('Please enter a valid contact email.');
+      return;
+    }
+
+    if (item.sizes && !selectedSize) {
+      setSubmitError('Please select a size before placing the order.');
+      return;
+    }
+
+    if (!slipFile) {
+      setSubmitError('Please upload a payment slip image.');
+      return;
+    }
+
+    if (!slipFile.type.startsWith('image/')) {
+      setSubmitError('Slip upload must be an image file.');
+      return;
+    }
+
+    if (slipFile.size > MAX_SLIP_SIZE_MB * 1024 * 1024) {
+      setSubmitError(`Slip image must be ${MAX_SLIP_SIZE_MB}MB or smaller.`);
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('shopItemId', String(item.id));
+    formData.append('contactPhone', contactPhone.trim());
+    formData.append('contactEmail', contactEmail.trim());
+    formData.append('selectedSize', selectedSize || '');
+    formData.append('screenName', screenName.trim());
+    formData.append('screenNumber', screenNumber.trim());
+    formData.append('slipFile', slipFile);
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload?.error || 'Failed to submit order.');
+      }
+
+      setSubmitSuccess(
+        `Order submitted successfully. Reference #${payload.order.id}. We will review your slip and contact you soon.`,
+      );
+      setContactPhone('');
+      setContactEmail('');
+      setScreenName('');
+      setScreenNumber('');
+      setSlipFile(null);
+    } catch (submitErrorValue) {
+      setSubmitError(
+        submitErrorValue instanceof Error ? submitErrorValue.message : 'Failed to submit order.',
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#030303] to-[#0a0a0a]">
-      {/* Bg grid */}
-      <div className="fixed inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:100px_100px] pointer-events-none" />
+      <div className="fixed inset-0 pointer-events-none bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:100px_100px]" />
 
-      <div className="max-w-7xl mx-auto px-6 pt-32 pb-24 relative z-10">
-        {/* Breadcrumb */}
-        <nav className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-neutral-600 mb-10">
-          <Link href="/" className="hover:text-white transition-colors">Home</Link>
-          <ChevronRight className="w-3 h-3" />
-          <Link href="/shop" className="hover:text-white transition-colors">Shop</Link>
-          <ChevronRight className="w-3 h-3" />
-          <span className="text-neutral-400 truncate max-w-[200px]">{item.name}</span>
+      <div className="relative z-10 mx-auto max-w-7xl px-6 pb-24 pt-32">
+        <nav className="mb-10 flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-neutral-600">
+          <Link href="/" className="transition-colors hover:text-white">
+            Home
+          </Link>
+          <ChevronRight className="h-3 w-3" />
+          <Link href="/shop" className="transition-colors hover:text-white">
+            Shop
+          </Link>
+          <ChevronRight className="h-3 w-3" />
+          <span className="max-w-[200px] truncate text-neutral-400">{item.name}</span>
         </nav>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 xl:gap-20">
-          {/* ── LEFT: Image Gallery ─────────────────────────────────────── */}
-          <div className="flex gap-4">
-            {/* Thumbnail strip */}
-            <div className="flex flex-col gap-2 flex-shrink-0">
-              {item.images.map((src, i) => (
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 xl:gap-20">
+          <div className="flex flex-col-reverse gap-4 lg:flex-row">
+            <div className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:pb-0">
+              {item.images.map((src, index) => (
                 <button
-                  key={i}
-                  onClick={() => setActiveImg(i)}
-                  className={`w-14 h-14 bg-neutral-900 border rounded overflow-hidden transition-all duration-200 flex-shrink-0 ${
-                    activeImg === i ? 'border-white/60' : 'border-white/10 hover:border-white/30'
+                  key={`${src}-${index}`}
+                  onClick={() => setActiveImg(index)}
+                  className={`h-14 w-14 flex-shrink-0 overflow-hidden rounded border transition-all duration-200 lg:h-14 lg:w-14 ${
+                    activeImg === index
+                      ? 'border-white/60'
+                      : 'border-white/10 hover:border-white/30'
                   }`}
                 >
-                  <div className="relative w-full h-full">
-                    <Image src={src} alt={`${item.name} view ${i + 1}`} fill sizes="56px" className="object-contain p-1" />
+                  <div className="relative h-full w-full bg-neutral-900">
+                    <Image
+                      src={src}
+                      alt={`${item.name} view ${index + 1}`}
+                      fill
+                      sizes="56px"
+                      className="object-contain p-1"
+                    />
                   </div>
                 </button>
               ))}
             </div>
 
-            {/* Main image */}
-            <div className="relative flex-1 aspect-square bg-neutral-900/80 border border-white/10 rounded-lg overflow-hidden">
-              {/* Glow bg */}
+            <div className="relative w-full aspect-square overflow-hidden rounded-lg border border-white/10 bg-neutral-900/80 lg:flex-1">
               <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(220,38,38,0.12),transparent_70%)]" />
 
-              {/* Badge overlay */}
               {item.badge && (
-                <div className="absolute inset-0 flex flex-col items-center justify-start pt-8 pointer-events-none z-10">
-                  <span className="text-2xl font-display font-black tracking-[0.15em] text-white drop-shadow-lg">
+                <div className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-start pt-8">
+                  <span className="font-display text-2xl font-black tracking-[0.15em] text-white drop-shadow-lg">
                     {item.badge}
                   </span>
-                  <span className="mt-1 px-4 py-1 border border-white/40 text-white font-bold font-display text-sm tracking-widest">
-                    ฿{item.price.toLocaleString()}.-
+                  <span className="mt-1 border border-white/40 px-4 py-1 font-display text-sm font-bold tracking-widest text-white">
+                    THB {item.price.toLocaleString()}
                   </span>
                 </div>
               )}
 
               <Image
-                src={item.images[activeImg]}
+                src={item.images[activeImg] ?? item.images[0]}
                 alt={item.name}
                 fill
                 sizes="(max-width: 1024px) 90vw, 50vw"
@@ -203,102 +340,183 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
             </div>
           </div>
 
-          {/* ── RIGHT: Product Info ─────────────────────────────────────── */}
           <div className="flex flex-col">
-            <span className="text-[10px] uppercase tracking-widest text-neutral-500 mb-2">{item.subtitle}</span>
-            <h1 className="font-display font-semibold text-2xl md:text-3xl tracking-tight text-white mb-4 leading-tight">
+            <span className="mb-2 text-[10px] uppercase tracking-widest text-neutral-500">
+              {item.subtitle}
+            </span>
+            <h1 className="mb-4 font-display text-2xl font-semibold tracking-tight text-white md:text-3xl">
               {item.name}
             </h1>
 
-            {/* Price */}
-            <div className="flex items-baseline gap-3 mb-8">
-              <span className="text-3xl font-display font-bold text-white">฿{item.price.toLocaleString()}</span>
+            <div className="mb-4 flex items-baseline gap-3">
+              <span className="font-display text-3xl font-bold text-white">
+                THB {item.price.toLocaleString()}
+              </span>
               {item.badge === 'PRE-ORDER' && (
-                <span className="text-[10px] uppercase tracking-widest text-red-500 border border-red-600/40 bg-red-600/10 px-2 py-1 rounded">
+                <span className="rounded border border-red-600/40 bg-red-600/10 px-2 py-1 text-[10px] uppercase tracking-widest text-red-500">
                   Pre-Order
                 </span>
               )}
             </div>
 
-            {/* Size Selector */}
-            {item.sizes && (
-              <div className="mb-6">
-                <div className="flex justify-between items-center mb-3">
-                  <span className="text-[10px] uppercase tracking-widest text-neutral-400 font-bold">
-                    SIZE : <span className="text-white">{selectedSize}</span>
-                  </span>
-                  <button className="text-[10px] uppercase tracking-widest text-neutral-500 hover:text-white transition-colors border-b border-neutral-700">
-                    SIZE CHART
-                  </button>
-                </div>
-                <div className="flex gap-2 flex-wrap">
-                  {item.sizes.map((sz) => (
-                    <button
-                      key={sz}
-                      onClick={() => setSelectedSize(sz)}
-                      className={`min-w-[44px] h-11 px-3 text-[11px] font-bold uppercase tracking-wider border transition-all duration-150 rounded-sm ${
-                        selectedSize === sz
-                          ? 'bg-white text-black border-white scale-105'
-                          : 'border-white/15 text-neutral-400 hover:border-white/40 hover:text-white'
-                      }`}
-                    >
-                      {sz}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Screen Printing Name */}
-            {item.sizes && (
-              <div className="mb-8">
-                <label className="text-[10px] uppercase tracking-widest text-neutral-400 font-bold block mb-3">
-                  Screen Printing Name
-                </label>
-                <div className="relative">
-                  <select
-                    value={printName}
-                    onChange={(e) => setPrintName(e.target.value)}
-                    className="w-full appearance-none bg-neutral-900 border border-white/15 text-white text-[11px] uppercase tracking-wider px-4 py-3 pr-10 rounded-sm focus:outline-none focus:border-white/40 transition-colors"
-                  >
-                    <option value="NO SCREEN">NO SCREEN</option>
-                    <option value="NAME + NUMBER">NAME + NUMBER (฿+150)</option>
-                    <option value="NAME ONLY">NAME ONLY (฿+100)</option>
-                    <option value="NUMBER ONLY">NUMBER ONLY (฿+80)</option>
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none" />
-                </div>
-              </div>
-            )}
-
-            {/* Add to Cart */}
-            <button
-              onClick={handleAdd}
-              className={`w-full py-4 text-[11px] font-black uppercase tracking-[0.2em] transition-all duration-200 rounded-sm mb-6 ${
-                added
-                  ? 'bg-green-600 text-white scale-95'
-                  : 'bg-white text-black hover:bg-neutral-200 hover:scale-[1.02] active:scale-95'
-              }`}
-            >
-              {added ? '✓ Added to Cart' : 'Add to Cart'}
-            </button>
-
-            {/* Contact note */}
-            <p className="text-[10px] text-neutral-600 uppercase tracking-widest text-center mb-8">
-              สอบถามเพิ่มเติม LINE: <span className="text-neutral-400">@sitfc</span>
+            <p className="mb-8 text-sm leading-6 text-neutral-400">
+              Submit your order details and upload the payment slip here. Once the slip is verified,
+              the club team will contact you through the phone number or email you provide.
             </p>
 
-            {/* Accordion */}
+            {submitError && (
+              <div className="mb-5 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-100">
+                {submitError}
+              </div>
+            )}
+
+            {submitSuccess && (
+              <div className="mb-5 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+                {submitSuccess}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="mb-10 space-y-5 rounded-3xl border border-white/10 bg-white/[0.03] p-5">
+              {item.sizes && (
+                <div>
+                  <div className="mb-3 flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">
+                      Size : <span className="text-white">{selectedSize}</span>
+                    </span>
+                    <span className="text-[10px] uppercase tracking-widest text-neutral-600">
+                      Required
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {item.sizes.map((size) => (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => setSelectedSize(size)}
+                        className={`h-11 min-w-[44px] rounded-sm border px-3 text-[11px] font-bold uppercase tracking-wider transition-all duration-150 ${
+                          selectedSize === size
+                            ? 'scale-105 border-white bg-white text-black'
+                            : 'border-white/15 text-neutral-400 hover:border-white/40 hover:text-white'
+                        }`}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="grid gap-5 md:grid-cols-2">
+                <label className="space-y-2">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">
+                    Contact Phone
+                  </span>
+                  <input
+                    value={contactPhone}
+                    onChange={(event) => setContactPhone(event.target.value)}
+                    className="w-full rounded-2xl border border-white/10 bg-neutral-900 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-white/30"
+                    placeholder="08x-xxx-xxxx"
+                  />
+                </label>
+
+                <label className="space-y-2">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">
+                    Contact Email
+                  </span>
+                  <input
+                    value={contactEmail}
+                    onChange={(event) => setContactEmail(event.target.value)}
+                    type="email"
+                    className="w-full rounded-2xl border border-white/10 bg-neutral-900 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-white/30"
+                    placeholder="you@example.com"
+                  />
+                </label>
+              </div>
+
+              <div className="grid gap-5 md:grid-cols-2">
+                <label className="space-y-2">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">
+                    Name To Screen
+                  </span>
+                  <input
+                    value={screenName}
+                    onChange={(event) => setScreenName(event.target.value)}
+                    className="w-full rounded-2xl border border-white/10 bg-neutral-900 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-white/30"
+                    placeholder="PLAYER NAME"
+                  />
+                </label>
+
+                <label className="space-y-2">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">
+                    Number To Screen
+                  </span>
+                  <input
+                    value={screenNumber}
+                    onChange={(event) => setScreenNumber(event.target.value)}
+                    className="w-full rounded-2xl border border-white/10 bg-neutral-900 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-white/30"
+                    placeholder="10"
+                  />
+                </label>
+              </div>
+
+              <label className="block space-y-3">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">
+                  Upload Payment Slip
+                </span>
+                <div className="rounded-3xl border border-dashed border-white/15 bg-neutral-950/70 p-4">
+                  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-red-500/10 text-red-400">
+                        <UploadCloud className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <div className="text-sm text-white">Slip image required</div>
+                        <div className="text-xs text-neutral-500">
+                          JPG, PNG, or WEBP. Maximum {MAX_SLIP_SIZE_MB}MB.
+                        </div>
+                      </div>
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(event) => setSlipFile(event.target.files?.[0] || null)}
+                      className="block w-full text-sm text-neutral-400 file:mr-4 file:rounded-full file:border-0 file:bg-white file:px-4 file:py-2 file:text-xs file:font-bold file:uppercase file:tracking-widest file:text-black hover:file:bg-neutral-200 md:w-auto"
+                    />
+                  </div>
+
+                  {slipFile && (
+                    <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+                      <div className="mb-3 text-xs text-neutral-400">{slipFile.name}</div>
+                      {slipPreviewUrl && (
+                        <img
+                          src={slipPreviewUrl}
+                          alt="Slip preview"
+                          className="max-h-64 w-full rounded-2xl object-contain bg-black/40"
+                        />
+                      )}
+                    </div>
+                  )}
+                </div>
+              </label>
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className={`inline-flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-[11px] font-black uppercase tracking-[0.2em] transition-all duration-200 ${
+                  isSubmitting
+                    ? 'cursor-not-allowed bg-white/10 text-neutral-500'
+                    : 'bg-white text-black hover:scale-[1.01] hover:bg-neutral-200 active:scale-95'
+                }`}
+              >
+                {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                {isSubmitting ? 'Submitting Order...' : 'Submit Order'}
+              </button>
+            </form>
+
             <div className="border-b border-white/10">
-              <Accordion title="Description">
-                {item.description}
-              </Accordion>
-              <Accordion title="Payment">
-                {item.payment}
-              </Accordion>
-              <Accordion title="Shipping & Return">
-                {item.shipping}
-              </Accordion>
+              <Accordion title="Description">{item.description}</Accordion>
+              <Accordion title="Payment">{item.payment}</Accordion>
+              <Accordion title="Shipping & Return">{item.shipping}</Accordion>
             </div>
           </div>
         </div>

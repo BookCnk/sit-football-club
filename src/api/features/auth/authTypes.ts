@@ -5,6 +5,7 @@ export type LoginInput = {
 
 export type LoginResponse = {
   message: string;
+  redirectTo?: string;
   user: {
     id: number;
     email: string;

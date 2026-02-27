@@ -36,6 +36,25 @@ model ShopItem {
   payment     String?
   shipping    String?
   createdAt   DateTime @default(now())
+  orders      ShopOrder[]
 
   @@map("shop_items")
+}
+
+model ShopOrder {
+  id            Int      @id @default(autoincrement())
+  shopItemId    Int
+  shopItem      ShopItem @relation(fields: [shopItemId], references: [id], onDelete: Cascade)
+  contactPhone  String
+  contactEmail  String
+  selectedSize  String?
+  screenName    String?
+  screenNumber  String?
+  slipImageUrl  String
+  slipFilePath  String
+  status        String   @default("pending")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("shop_orders")
 }

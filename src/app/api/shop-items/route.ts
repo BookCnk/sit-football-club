@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/requireAdmin";
+import { adminErrorResponse, requireAdmin } from "@/lib/requireAdmin";
 
 // GET /api/shop-items — ดึงรายการสินค้าทั้งหมด
 export async function GET() {
@@ -59,9 +59,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(item, { status: 201 });
   } catch (error) {
     console.error("[POST /api/shop-items]", error);
-    return NextResponse.json(
-      { error: "Failed to create shop item" },
-      { status: 500 },
-    );
+    return adminErrorResponse(error, "Failed to create shop item");
   }
 }

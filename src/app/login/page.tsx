@@ -24,13 +24,13 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      await login.mutateAsync({
+      const response = await login.mutateAsync({
         email: email.trim(),
         password,
       });
 
       // ✅ cookie token ถูก set โดย backend แล้ว (httpOnly)
-      router.replace("/");
+      router.replace(response.redirectTo || (response.user.role === "admin" ? "/dashboard" : "/"));
     } catch (err: any) {
       setError(err?.message || "ล็อกอินไม่สำเร็จ ลองใหม่อีกครั้ง");
     }

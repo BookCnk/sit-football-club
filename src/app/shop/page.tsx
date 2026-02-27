@@ -18,25 +18,41 @@ type CartItem = {
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 function getImageUrl(images: unknown): string {
+  const isSafeImageSrc = (value: string) =>
+    value.startsWith("/") ||
+    value.startsWith("http://") ||
+    value.startsWith("https://");
   // รองรับหลายรูปแบบ: string, string[], {url}, {url}[]
   if (!images) return "/placeholder.png";
 
-  if (typeof images === "string") return images;
+  if (typeof images === "string") {
+    const value = images.trim();
+    return isSafeImageSrc(value) ? value : "/placeholder.png";
+  }
 
   if (Array.isArray(images)) {
     const first = images[0];
     if (!first) return "/placeholder.png";
-    if (typeof first === "string") return first;
+    if (typeof first === "string") {
+      const value = first.trim();
+      return isSafeImageSrc(value) ? value : "/placeholder.png";
+    }
     if (typeof first === "object" && first && "url" in first) {
       const u = (first as any).url;
-      if (typeof u === "string") return u;
+      if (typeof u === "string") {
+        const value = u.trim();
+        return isSafeImageSrc(value) ? value : "/placeholder.png";
+      }
     }
     return "/placeholder.png";
   }
 
   if (typeof images === "object" && images && "url" in images) {
     const u = (images as any).url;
-    if (typeof u === "string") return u;
+    if (typeof u === "string") {
+      const value = u.trim();
+      return isSafeImageSrc(value) ? value : "/placeholder.png";
+    }
   }
 
   return "/placeholder.png";

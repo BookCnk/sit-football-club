@@ -1,24 +1,30 @@
 'use client';
 
-
 import { useInView } from '@/hooks/useInView';
 import { useCountUp } from '@/hooks/useCountUp';
 
-const STAT_VALUES = [2010, 5000, 99];
-const STAT_LABELS = ['Founded', 'Capacity', 'Cup Winners'];
-const STAT_DISPLAY = ['2024', '40+', 'TH'];
+const STAT_VALUES = [2025, 40, 0];
+const STAT_LABELS = ['Season', 'Members', 'Latest Champions'];
+const STAT_DISPLAY = ['2025', '40+', 'IT3K 2026'];
 
-function AnimatedStat({ value, label, display, trigger }: { value: number; label: string; display: string; trigger: boolean }) {
+function AnimatedStat({
+  value,
+  label,
+  display,
+  trigger,
+}: {
+  value: number;
+  label: string;
+  display: string;
+  trigger: boolean;
+}) {
   const count = useCountUp({ end: value, duration: 1800 }, trigger);
-  const isNumeric = !isNaN(value) && value > 100;
+  const isNumeric = value > 100;
+
   return (
     <div className="flex flex-col">
       <span className="text-3xl font-display font-bold text-white">
-        {isNumeric
-          ? label === 'Capacity'
-            ? count >= 5000 ? '5k+' : `${(count / 1000).toFixed(1)}k`
-            : count.toString()
-          : display}
+        {isNumeric ? count.toString() : display}
       </span>
       <span className="text-[10px] uppercase text-neutral-500 tracking-widest">{label}</span>
     </div>
@@ -34,7 +40,7 @@ export default function HistorySection() {
       className="max-w-7xl mx-auto px-6 mb-32"
     >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-        {/* Video — slides in from left when visible */}
+        {/* Video slides in from left when visible */}
         <div
           className={`order-2 md:order-1 relative transition-all duration-900 ease-out ${
             inView ? 'animate-slide-in-left' : 'opacity-0'
@@ -52,20 +58,26 @@ export default function HistorySection() {
           </video>
         </div>
 
-        {/* Content — slides in from right */}
+        {/* Content slides in from right */}
         <div
           className={`order-1 md:order-2 transition-all duration-900 ease-out ${
             inView ? 'animate-slide-in-right' : 'opacity-0'
           }`}
         >
-          <span className="text-[10px] font-bold uppercase tracking-widest text-red-500 mb-4 block">Our History</span>
+          <span className="text-[10px] font-bold uppercase tracking-widest text-red-500 mb-4 block">
+            Club Overview
+          </span>
           <h2 className="text-4xl md:text-5xl font-display font-semibold tracking-tighter mb-6">
-            FROM THE CLASSROOM<br />TO <span className="text-neutral-500">THE PITCH</span>
+            SIT FOOTBALL CLUB
+            <br />
+            IN <span className="text-neutral-500">2025</span>
           </h2>
           <p className="text-neutral-400 text-sm leading-relaxed mb-8">
-            SIT Football Club was founded at King Mongkut&apos;s University of Technology Thonburi
-            in 2010, uniting players from the School of Information Technology.
-            Built on passion, teamwork, and the drive to win — we compete at the highest university level.
+            In 2025, SIT Football Club continued to represent the School of Information Technology
+            at King Mongkut&apos;s University of Technology Thonburi with discipline, unity, and
+            competitive ambition. With a club community of more than 40 members, the team
+            strengthened its identity on and off the pitch, building the standard that led to its
+            latest title as IT3K 2026 champions.
           </p>
           <div className="flex gap-8">
             {STAT_VALUES.map((val, i) => (

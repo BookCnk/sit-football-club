@@ -1,22 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { verifyToken } from '@/lib/auth';
+
+type TokenPayload = {
+  userId: number;
+  email: string;
+  role: string;
+};
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = request.headers.get('x-user-id');
-    const userEmail = request.headers.get('x-user-email');
+    const token = request.cookies.get('token')?.value;
 
-    if (!userId || !userEmail) {
+    if (!token) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       );
     }
 
+    const decoded = verifyToken(token) as TokenPayload | null;
+
+    if (!decoded) {
+      return NextResponse.json(
+        { error: 'Invalid token' },
+        { status: 401 }
+      );
+    }
+
     const user = await prisma.user.findUnique({
-      where: { 
-        id: parseInt(userId),
-        email: userEmail 
+      where: {
+        id: decoded.userId,
+        email: decoded.email
       },
       select: {
         id: true,

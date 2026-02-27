@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/requireAdmin";
+import { adminErrorResponse, requireAdmin } from "@/lib/requireAdmin";
 
 type Params = { params: { id: string } };
 
@@ -50,10 +50,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
     console.error("[PATCH /api/shop-items/:id]", error);
-    return NextResponse.json(
-      { error: "Failed to update item" },
-      { status: 500 },
-    );
+    return adminErrorResponse(error, "Failed to update item");
   }
 }
 
@@ -72,9 +69,6 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
     console.error("[DELETE /api/shop-items/:id]", error);
-    return NextResponse.json(
-      { error: "Failed to delete item" },
-      { status: 500 },
-    );
+    return adminErrorResponse(error, "Failed to delete item");
   }
 }

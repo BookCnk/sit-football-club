@@ -1,13 +1,14 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
-import { log } from "console";
 
-export function requireAdmin(req: NextRequest) {
+type AdminTokenPayload = {
+  userId: number;
+  email: string;
+  role: string;
+};
+
+export function requireAdmin(req: NextRequest): AdminTokenPayload {
   const token = req.cookies.get("token")?.value;
-  const cookies = req.cookies.getAll();
-  console.log(cookies);
-  console.log(req.cookies.get("token"));
-  console.log(token);
 
   if (!token) {
     throw new Error("UNAUTHORIZED");
@@ -18,15 +19,38 @@ export function requireAdmin(req: NextRequest) {
     throw new Error("JWT_SECRET_MISSING");
   }
 
-  const decoded = jwt.verify(token, secret) as {
-    userId: number;
-    email: string;
-    role: string;
-  };
+  const decoded = jwt.verify(token, secret) as AdminTokenPayload;
 
   if (decoded.role !== "admin") {
     throw new Error("FORBIDDEN");
   }
 
-  return decoded; // เผื่ออยากใช้ userId ต่อ
+  return decoded;
+}
+
+export function adminErrorResponse(error: unknown, fallbackMessage: string) {
+  const code = error instanceof Error ? error.message : "";
+
+  if (code === "UNAUTHORIZED") {
+    return NextResponse.json(
+      { error: "Authentication required" },
+      { status: 401 },
+    );
+  }
+
+  if (code === "FORBIDDEN") {
+    return NextResponse.json(
+      { error: "Admin access required" },
+      { status: 403 },
+    );
+  }
+
+  if (code === "JWT_SECRET_MISSING") {
+    return NextResponse.json(
+      { error: "Server authentication is not configured" },
+      { status: 500 },
+    );
+  }
+
+  return NextResponse.json({ error: fallbackMessage }, { status: 500 });
 }
