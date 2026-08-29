@@ -4,6 +4,14 @@ import { prisma } from "@/lib/prisma";
 
 const departments = ["IT", "CS", "DSI"] as const;
 
+const teamSelect = {
+  id: true,
+  name: true,
+  generation: true,
+  department: true,
+  members: true,
+} as const;
+
 function parseTeam(body: unknown) {
   if (!body || typeof body !== "object") return null;
   const { name, generation, department, members, password } = body as Record<string, unknown>;
@@ -35,7 +43,7 @@ export async function POST(request: NextRequest) {
         members: team.members,
         passwordHash: await hashPassword(team.password),
       },
-      select: { id: true, name: true, generation: true, department: true, members: true },
+      select: teamSelect,
     });
     return NextResponse.json(created, { status: 201 });
   } catch (error) {
@@ -44,6 +52,19 @@ export async function POST(request: NextRequest) {
     }
     console.error("[POST /api/tournament-teams]", error);
     return NextResponse.json({ error: "บันทึกทีมไม่สำเร็จ" }, { status: 500 });
+  }
+}
+
+export async function GET() {
+  try {
+    const teams = await prisma.tournamentTeam.findMany({
+      select: teamSelect,
+      orderBy: { createdAt: "desc" },
+    });
+    return NextResponse.json(teams);
+  } catch (error) {
+    console.error("[GET /api/tournament-teams]", error);
+    return NextResponse.json({ error: "โหลดรายชื่อทีมไม่สำเร็จ" }, { status: 500 });
   }
 }
 
@@ -62,7 +83,7 @@ export async function PATCH(request: NextRequest) {
     const updated = await prisma.tournamentTeam.update({
       where: { id: existing.id },
       data: { department: team.department, members: team.members },
-      select: { id: true, name: true, generation: true, department: true, members: true },
+      select: teamSelect,
     });
     return NextResponse.json(updated);
   } catch (error) {
