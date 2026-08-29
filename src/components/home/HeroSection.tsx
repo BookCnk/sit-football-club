@@ -7,12 +7,8 @@ export default function HeroSection() {
         muted
         loop
         playsInline
-        className="absolute inset-0 w-full h-full object-cover object-[center_80%] opacity-30"
-      >
-        <source
-          src="/b288f342648f4a4fbf6b1be723cc12c2.mov"
-          type="video/mp4"
-        />
+        className="absolute inset-0 w-full h-full object-cover object-[center_80%] opacity-30">
+        <source src="/b288f342648f4a4fbf6b1be723cc12c2.mov" type="video/mp4" />
       </video>
 
       {/* Gradient Overlays */}
@@ -21,16 +17,19 @@ export default function HeroSection() {
 
       {/* Content — each element animate-in via CSS classes in globals.css */}
       <div className="relative z-10 text-center flex flex-col items-center w-full max-w-6xl mx-auto px-6 py-36">
-
         {/* Badge fades in from above */}
         <div className="hero-badge mb-6 inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm">
           <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-          <span className="text-[10px] uppercase tracking-widest text-neutral-300">Official Website</span>
+          <span className="text-[10px] uppercase tracking-widest text-neutral-300">
+            Official Website
+          </span>
         </div>
 
         {/* Headline fades up with slight delay */}
         <h1 className="hero-title text-[clamp(2.5rem,10vw,9rem)] leading-[0.85] font-display font-semibold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-neutral-600 mix-blend-overlay w-full">
-          WE ARE<br />SIT FOOTBALL  CLUB
+          WE ARE
+          <br />
+          SIT FOOTBALL CLUB
         </h1>
 
         {/* Tagline */}
@@ -40,9 +39,8 @@ export default function HeroSection() {
 
         {/* Buttons */}
         <div className="hero-buttons mt-12 flex flex-col md:flex-row gap-4">
-         
           <button className="px-8 py-3 border border-white/20 text-white text-xs font-semibold uppercase tracking-widest hover:bg-white/10 hover:scale-105 active:scale-95 transition-all duration-200 rounded-sm backdrop-blur-sm">
-            Visit Club Shop
+            Join IT Relation Tournament
           </button>
         </div>
       </div>
