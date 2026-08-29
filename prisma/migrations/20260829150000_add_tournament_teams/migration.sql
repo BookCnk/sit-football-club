@@ -1,8 +1,12 @@
+-- CreateEnum
+CREATE TYPE "Department" AS ENUM ('IT', 'CS', 'DSI');
+
 -- CreateTable
 CREATE TABLE "tournament_teams" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "generation" TEXT NOT NULL,
+    "department" "Department" NOT NULL,
     "passwordHash" TEXT NOT NULL,
     "members" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,

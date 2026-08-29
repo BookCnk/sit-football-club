@@ -7,6 +7,7 @@ import { Instagram, Menu, X } from "lucide-react";
 
 const NAV_LINKS = [
   { label: "TEAM", href: "#" },
+  { label: "IT RELATION", href: "/it-relation" },
   { label: "SHOP", href: "/shop" },
   { label: "HISTORY", href: "#" },
 ];

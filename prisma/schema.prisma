@@ -12,6 +12,12 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Department {
+  IT
+  CS
+  DSI
+}
+
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
@@ -60,13 +66,14 @@ model ShopOrder {
 }
 
 model TournamentTeam {
-  id           Int      @id @default(autoincrement())
+  id           Int        @id @default(autoincrement())
   name         String
   generation   String
+  department   Department
   passwordHash String
-  members      String[] @default([])
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  members      String[]   @default([])
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 
   @@unique([name, generation])
   @@map("tournament_teams")
