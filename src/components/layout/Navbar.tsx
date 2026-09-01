@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Instagram, Menu, X } from "lucide-react";
 
 const NAV_LINKS = [
@@ -13,7 +14,12 @@ const NAV_LINKS = [
 ];
 
 export default function Navbar() {
+  const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  if (pathname?.startsWith("/dashboard")) {
+    return null;
+  }
 
   return (
     <nav className="fixed top-0 w-full z-50 backdrop-blur-md bg-black/70 border-b border-white/5">
@@ -81,19 +87,6 @@ export default function Navbar() {
           ))}
         </div>
       )}
-
-      {/* Announcement Bar */}
-      {/* <div className="w-full bg-red-600/10 border-y border-red-600/20 py-2">
-        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center text-[10px] uppercase tracking-widest text-red-400">
-          <span className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
-            SIT FC vs Chulalongkorn FC — SAT 15 MAR · 15:00
-          </span>
-          <span className="hover:text-white cursor-pointer transition-colors">
-            Get Tickets -&gt;
-          </span>
-        </div>
-      </div> */}
     </nav>
   );
 }

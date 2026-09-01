@@ -1,8 +1,17 @@
+"use client";
+
 import Image from 'next/image';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Facebook, Twitter, Youtube, Instagram } from 'lucide-react';
 
 export default function Footer() {
+  const pathname = usePathname();
+
+  if (pathname?.startsWith("/dashboard")) {
+    return null;
+  }
+
   return (
     <footer className="bg-black border-t border-white/10 pt-20 pb-10">
       <div className="max-w-7xl mx-auto px-6">
@@ -75,7 +84,8 @@ export default function Footer() {
 
         <div className="mt-10 text-center text-[10px] text-neutral-700 uppercase tracking-widest">
           &copy; 2025 SIT Football Club · KMUTT. All Rights Reserved.
-        </div>        <div className="mt-10 text-center text-[10px] text-neutral-700 uppercase tracking-widest">
+        </div>
+        <div className="mt-10 text-center text-[10px] text-neutral-700 uppercase tracking-widest">
           &copy; Make by Book Chanakarn
         </div>
       </div>

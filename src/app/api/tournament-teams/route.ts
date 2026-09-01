@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { hashPassword, verifyPassword } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { requireAdmin } from "@/lib/requireAdmin";
 
 const departments = ["IT", "CS", "DSI"] as const;
 
@@ -70,7 +71,56 @@ export async function GET() {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const team = parseTeam(await request.json());
+    const body = await request.json();
+
+    let isAdmin = false;
+    try {
+      requireAdmin(request);
+      isAdmin = true;
+    } catch {
+      isAdmin = false;
+    }
+
+    if (isAdmin) {
+      const { id, name, generation, department, members, password } = body ?? {};
+      let targetTeam = null;
+
+      if (typeof id === "number" || (typeof id === "string" && !isNaN(Number(id)))) {
+        targetTeam = await prisma.tournamentTeam.findUnique({ where: { id: Number(id) } });
+      } else if (typeof name === "string" && typeof generation === "string") {
+        targetTeam = await prisma.tournamentTeam.findUnique({
+          where: { name_generation: { name: name.trim(), generation: generation.trim() } },
+        });
+      }
+
+      if (!targetTeam) {
+        return NextResponse.json({ error: "ไม่พบทีมที่ต้องการแก้ไข" }, { status: 404 });
+      }
+
+      const cleanMembers = Array.isArray(members)
+        ? members.filter((m): m is string => typeof m === "string").map((m) => m.trim()).filter(Boolean)
+        : targetTeam.members;
+
+      const updateData: { department?: (typeof departments)[number]; members?: string[]; passwordHash?: string } = {
+        department: departments.includes(department) ? department : (targetTeam.department as (typeof departments)[number]),
+        members: cleanMembers.length ? cleanMembers : targetTeam.members,
+      };
+
+      if (typeof password === "string" && password.length >= 6) {
+        updateData.passwordHash = await hashPassword(password);
+      }
+
+      const updated = await prisma.tournamentTeam.update({
+        where: { id: targetTeam.id },
+        data: updateData,
+        select: teamSelect,
+      });
+
+      return NextResponse.json(updated);
+    }
+
+    // Non-admin patch logic (requires password)
+    const team = parseTeam(body);
     if (!team) return NextResponse.json({ error: "กรอกข้อมูลให้ครบ รหัสอย่างน้อย 6 ตัวอักษร และสมาชิกไม่เกิน 30 คน" }, { status: 400 });
 
     const existing = await prisma.tournamentTeam.findUnique({
@@ -95,8 +145,46 @@ export async function PATCH(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, generation, password } = body ?? {};
+    const { id, name, generation, password } = body ?? {};
 
+    // Check if request is from admin
+    let isAdmin = false;
+    try {
+      requireAdmin(request);
+      isAdmin = true;
+    } catch {
+      isAdmin = false;
+    }
+
+    if (isAdmin) {
+      let targetId: number | undefined = typeof id === "number" ? id : undefined;
+      if (!targetId && typeof id === "string" && !isNaN(Number(id))) {
+        targetId = Number(id);
+      }
+      if (!targetId && typeof name === "string" && typeof generation === "string") {
+        const existing = await prisma.tournamentTeam.findUnique({
+          where: {
+            name_generation: {
+              name: name.trim(),
+              generation: generation.trim(),
+            },
+          },
+        });
+        targetId = existing?.id;
+      }
+
+      if (!targetId) {
+        return NextResponse.json({ error: "ไม่พบทีมที่ต้องการลบ" }, { status: 404 });
+      }
+
+      await prisma.tournamentTeam.delete({
+        where: { id: targetId },
+      });
+
+      return NextResponse.json({ success: true, id: targetId });
+    }
+
+    // Non-admin delete logic (requires password)
     if (
       typeof name !== "string" ||
       !name.trim() ||

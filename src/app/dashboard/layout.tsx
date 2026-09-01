@@ -62,7 +62,7 @@ export default function DashboardLayout({
     },
     {
       label: "IT Relation Teams",
-      href: "/it-relation",
+      href: "/dashboard/it-relation",
       icon: Trophy,
       exact: false,
     },
@@ -106,7 +106,7 @@ export default function DashboardLayout({
 
         {/* SIDEBAR NAVIGATION */}
         <aside
-          className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-white/10 bg-[#0a0a0a] transition-transform duration-300 lg:static lg:translate-x-0 ${
+          className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-white/10 bg-[#0a0a0a] transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen lg:w-64 lg:shrink-0 lg:translate-x-0 ${
             mobileOpen ? "translate-x-0" : "-translate-x-full"
           }`}>
           {/* SIDEBAR BRAND HEADER */}

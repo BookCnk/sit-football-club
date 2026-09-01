@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export default function HeroSection() {
   return (
     <header className="relative min-h-screen w-full flex items-center justify-center overflow-hidden">
@@ -39,9 +41,11 @@ export default function HeroSection() {
 
         {/* Buttons */}
         <div className="hero-buttons mt-12 flex flex-col md:flex-row gap-4">
-          <button className="px-8 py-3 border border-white/20 text-white text-xs font-semibold uppercase tracking-widest hover:bg-white/10 hover:scale-105 active:scale-95 transition-all duration-200 rounded-sm backdrop-blur-sm">
+          <Link
+            href="/it-relation"
+            className="px-8 py-3 border border-white/20 text-white text-xs font-semibold uppercase tracking-widest hover:bg-white/10 hover:scale-105 active:scale-95 transition-all duration-200 rounded-sm backdrop-blur-sm inline-flex items-center justify-center">
             Join IT Relation Tournament
-          </button>
+          </Link>
         </div>
       </div>
 

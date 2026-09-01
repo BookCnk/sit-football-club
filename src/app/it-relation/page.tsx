@@ -1,9 +1,10 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { Eye, Globe, Plus, Trash2, User, UsersRound } from "lucide-react";
+import { Eye, Globe, LayoutGrid, Plus, ShieldCheck, Table as TableIcon, Trash2, User, UsersRound } from "lucide-react";
 import SystemModal from "@/components/ui/SystemModal";
 import { useToast } from "@/hooks/useToast";
+import { useAuth } from "@/hooks/useAuth";
 
 const departments = ["IT", "CS", "DSI"] as const;
 type Department = (typeof departments)[number];
@@ -158,10 +159,20 @@ const content = {
 
 export default function ItRelationPage() {
   const toast = useToast();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
+
   const [lang, setLang] = useState<Language>("th");
+  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   const [mode, setMode] = useState<"register" | "edit">("register");
   const [editStep, setEditStep] = useState<1 | 2>(1);
   const [modalOpen, setModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (isAdmin) {
+      setViewMode("table");
+    }
+  }, [isAdmin]);
 
   // View modal state
   const [viewModalOpen, setViewModalOpen] = useState(false);
@@ -325,7 +336,9 @@ export default function ItRelationPage() {
   // Handle Team Deletion
   async function handleDeleteTeam(event: FormEvent) {
     event.preventDefault();
-    if (!selectedDeleteTeam || deletePassword.length < 6) {
+    if (!selectedDeleteTeam) return;
+
+    if (!isAdmin && deletePassword.length < 6) {
       toast.error(t.toastDeleteError, t.toastErrorTitle);
       return;
     }
@@ -335,11 +348,15 @@ export default function ItRelationPage() {
       const response = await fetch("/api/tournament-teams", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: selectedDeleteTeam.name,
-          generation: selectedDeleteTeam.generation,
-          password: deletePassword,
-        }),
+        body: JSON.stringify(
+          isAdmin
+            ? { id: selectedDeleteTeam.id }
+            : {
+                name: selectedDeleteTeam.name,
+                generation: selectedDeleteTeam.generation,
+                password: deletePassword,
+              },
+        ),
       });
 
       const data = await response.json();
@@ -349,7 +366,14 @@ export default function ItRelationPage() {
 
       setTeams((current) => current.filter((item) => item.id !== data.id));
       setDeleteModalOpen(false);
-      toast.success(t.toastSuccessDelete, "IT Relation Tournament");
+      toast.success(
+        isAdmin
+          ? lang === "th"
+            ? "ลบทีมเรียบร้อยแล้ว (Admin)"
+            : "Team deleted (Admin)"
+          : t.toastSuccessDelete,
+        "IT Relation Tournament",
+      );
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : t.toastDeleteError,
@@ -419,16 +443,48 @@ export default function ItRelationPage() {
         <section className="mt-8 pt-4">
           <div className="flex items-end justify-between gap-4">
             <div>
-              <p className="font-mono text-xs tracking-[0.2em] text-red-500">
-                {t.sectionTag}
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="font-mono text-xs tracking-[0.2em] text-red-500">
+                  {t.sectionTag}
+                </p>
+                {isAdmin && (
+                  <span className="inline-flex items-center gap-1 rounded border border-red-500/30 bg-red-500/10 px-2 py-0.5 text-[10px] font-mono font-bold text-red-400">
+                    <ShieldCheck className="h-3 w-3" />
+                    ADMIN MODE
+                  </span>
+                )}
+              </div>
               <h2 className="mt-2 font-display text-2xl font-semibold">
                 {t.sectionTitle}
               </h2>
             </div>
-            <span className="text-sm text-neutral-500">
-              {t.teamsCount(teams.length)}
-            </span>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center rounded-lg border border-white/10 bg-white/[0.04] p-0.5">
+                <button
+                  onClick={() => setViewMode("grid")}
+                  title="Grid View"
+                  className={`rounded p-1.5 transition ${
+                    viewMode === "grid"
+                      ? "bg-red-600 text-white"
+                      : "text-neutral-400 hover:text-white"
+                  }`}>
+                  <LayoutGrid className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => setViewMode("table")}
+                  title="Table View"
+                  className={`rounded p-1.5 transition ${
+                    viewMode === "table"
+                      ? "bg-red-600 text-white"
+                      : "text-neutral-400 hover:text-white"
+                  }`}>
+                  <TableIcon className="h-4 w-4" />
+                </button>
+              </div>
+              <span className="text-sm text-neutral-500">
+                {t.teamsCount(teams.length)}
+              </span>
+            </div>
           </div>
           {loading ? (
             <div className="mt-5 space-y-3">
@@ -451,43 +507,103 @@ export default function ItRelationPage() {
           ) : listError ? (
             <p className="mt-5 text-sm text-red-400">{t.loadError}</p>
           ) : teams.length ? (
-            <div className="mt-5 space-y-3">
-              {teams.map((team) => (
-                <div
-                  key={team.id}
-                  className="flex flex-col justify-between gap-4 rounded-lg bg-white/[0.02] p-4 transition sm:flex-row sm:items-center hover:bg-white/[0.04]">
-                  <div>
-                    <h3 className="font-medium text-white">{team.name}</h3>
-                    <p className="mt-1 text-xs text-neutral-500">
-                      {t.teamMeta(
-                        team.generation,
-                        team.department,
-                        team.members.length,
-                      )}
-                    </p>
+            viewMode === "table" ? (
+              <div className="mt-5 overflow-x-auto rounded-lg border border-white/10 bg-white/[0.02]">
+                <table className="w-full text-left text-sm text-neutral-300">
+                  <thead className="border-b border-white/10 bg-white/[0.04] text-xs font-semibold uppercase tracking-wider text-neutral-400">
+                    <tr>
+                      <th scope="col" className="px-4 py-3.5">#</th>
+                      <th scope="col" className="px-4 py-3.5">{lang === "th" ? "ชื่อทีม" : "Team Name"}</th>
+                      <th scope="col" className="px-4 py-3.5">{lang === "th" ? "รุ่น" : "Batch"}</th>
+                      <th scope="col" className="px-4 py-3.5">{lang === "th" ? "สาขา" : "Department"}</th>
+                      <th scope="col" className="px-4 py-3.5">{lang === "th" ? "สมาชิก" : "Members"}</th>
+                      <th scope="col" className="px-4 py-3.5 text-right">{lang === "th" ? "การดำเนินการ" : "Actions"}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {teams.map((team, idx) => (
+                      <tr key={team.id} className="transition hover:bg-white/[0.04]">
+                        <td className="px-4 py-4 font-mono text-xs text-neutral-500">{idx + 1}</td>
+                        <td className="px-4 py-4 font-medium text-white">{team.name}</td>
+                        <td className="px-4 py-4 text-neutral-300">รุ่น {team.generation}</td>
+                        <td className="px-4 py-4">
+                          <span className="inline-flex items-center rounded-full border border-red-500/20 bg-red-500/10 px-2.5 py-0.5 text-xs font-medium text-red-400">
+                            {team.department}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 text-neutral-400">
+                          <button
+                            onClick={() => openViewModal(team)}
+                            className="inline-flex items-center gap-1.5 text-xs text-neutral-300 hover:text-white hover:underline">
+                            <Eye className="h-3.5 w-3.5 text-neutral-400" />
+                            {team.members.length} {lang === "th" ? "คน" : "players"}
+                          </button>
+                        </td>
+                        <td className="px-4 py-4 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => openViewModal(team)}
+                              className="flex items-center gap-1 border border-white/10 px-2.5 py-1.5 text-[10px] font-bold tracking-wider text-neutral-300 transition hover:border-white/30 hover:text-white rounded">
+                              <Eye className="h-3 w-3" />
+                              {t.btnViewItem}
+                            </button>
+                            <button
+                              onClick={() => openForm("edit", team)}
+                              className="border border-white/10 px-2.5 py-1.5 text-[10px] font-bold tracking-wider text-neutral-300 transition hover:border-white/30 hover:text-white rounded">
+                              {t.btnEditItem}
+                            </button>
+                            <button
+                              onClick={() => openDeleteModal(team)}
+                              className="flex items-center gap-1 border border-red-500/30 bg-red-500/10 px-2.5 py-1.5 text-[10px] font-bold tracking-wider text-red-400 transition hover:border-red-500 hover:bg-red-600 hover:text-white rounded">
+                              <Trash2 className="h-3 w-3" />
+                              {t.btnDeleteItem}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="mt-5 space-y-3">
+                {teams.map((team) => (
+                  <div
+                    key={team.id}
+                    className="flex flex-col justify-between gap-4 rounded-lg bg-white/[0.02] p-4 transition sm:flex-row sm:items-center hover:bg-white/[0.04]">
+                    <div>
+                      <h3 className="font-medium text-white">{team.name}</h3>
+                      <p className="mt-1 text-xs text-neutral-500">
+                        {t.teamMeta(
+                          team.generation,
+                          team.department,
+                          team.members.length,
+                        )}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => openViewModal(team)}
+                        className="flex items-center gap-1.5 border border-white/10 px-3 py-2 text-[10px] font-bold tracking-widest text-neutral-300 transition hover:border-white/30 hover:text-white">
+                        <Eye className="h-3.5 w-3.5 text-neutral-400" />
+                        {t.btnViewItem}
+                      </button>
+                      <button
+                        onClick={() => openForm("edit", team)}
+                        className="border border-white/10 px-3 py-2 text-[10px] font-bold tracking-widest text-neutral-300 transition hover:border-red-500 hover:text-white">
+                        {t.btnEditItem}
+                      </button>
+                      <button
+                        onClick={() => openDeleteModal(team)}
+                        className="flex items-center gap-1 border border-red-500/20 bg-red-500/5 px-3 py-2 text-[10px] font-bold tracking-widest text-red-400 transition hover:border-red-500 hover:bg-red-500 hover:text-white">
+                        <Trash2 className="h-3.5 w-3.5" />
+                        {t.btnDeleteItem}
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => openViewModal(team)}
-                      className="flex items-center gap-1.5 border border-white/10 px-3 py-2 text-[10px] font-bold tracking-widest text-neutral-300 transition hover:border-white/30 hover:text-white">
-                      <Eye className="h-3.5 w-3.5 text-neutral-400" />
-                      {t.btnViewItem}
-                    </button>
-                    <button
-                      onClick={() => openForm("edit", team)}
-                      className="border border-white/10 px-3 py-2 text-[10px] font-bold tracking-widest text-neutral-300 transition hover:border-red-500 hover:text-white">
-                      {t.btnEditItem}
-                    </button>
-                    <button
-                      onClick={() => openDeleteModal(team)}
-                      className="flex items-center gap-1 border border-red-500/20 bg-red-500/5 px-3 py-2 text-[10px] font-bold tracking-widest text-red-400 transition hover:border-red-500 hover:bg-red-500 hover:text-white">
-                      <Trash2 className="h-3.5 w-3.5" />
-                      {t.btnDeleteItem}
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )
           ) : (
             <p className="mt-5 text-sm text-neutral-500">{t.emptyTeams}</p>
           )}
@@ -545,30 +661,36 @@ export default function ItRelationPage() {
       <SystemModal
         open={deleteModalOpen}
         onClose={() => !deleting && setDeleteModalOpen(false)}
-        title={t.deleteModalTitle}
-        description={t.deleteModalDesc}
+        title={isAdmin ? (lang === "th" ? "ยืนยันลบทีม (Admin)" : "Confirm Delete (Admin)") : t.deleteModalTitle}
+        description={isAdmin ? (lang === "th" ? "ลบทีมออกจากระบบทันทีในฐานะ Admin" : "Delete team immediately as Admin") : t.deleteModalDesc}
         maxWidthClassName="max-w-md">
         {selectedDeleteTeam && (
           <form onSubmit={handleDeleteTeam} className="space-y-5">
             <div className="rounded bg-red-500/10 border border-red-500/20 p-3 text-xs leading-5 text-red-300">
-              {t.deleteWarningText(
-                selectedDeleteTeam.name,
-                selectedDeleteTeam.generation,
-              )}
+              {isAdmin
+                ? (lang === "th"
+                    ? `คุณกำลังจะลบทีม "${selectedDeleteTeam.name}" (รุ่น ${selectedDeleteTeam.generation}) ออกจากระบบ การดำเนินการนี้โดย Admin ไม่ต้องใช้รหัสผ่าน`
+                    : `You are deleting team "${selectedDeleteTeam.name}" (Batch ${selectedDeleteTeam.generation}). As Admin, no password is required.`)
+                : t.deleteWarningText(
+                    selectedDeleteTeam.name,
+                    selectedDeleteTeam.generation,
+                  )}
             </div>
 
-            <label className="block text-sm font-medium">
-              {t.labelPassword}
-              <input
-                required
-                minLength={6}
-                type="password"
-                value={deletePassword}
-                onChange={(event) => setDeletePassword(event.target.value)}
-                className="mt-2 w-full border border-white/15 bg-white/[0.04] px-4 py-3 text-white outline-none transition focus:border-red-500"
-                placeholder={t.placeholderPassword}
-              />
-            </label>
+            {!isAdmin && (
+              <label className="block text-sm font-medium">
+                {t.labelPassword}
+                <input
+                  required
+                  minLength={6}
+                  type="password"
+                  value={deletePassword}
+                  onChange={(event) => setDeletePassword(event.target.value)}
+                  className="mt-2 w-full border border-white/15 bg-white/[0.04] px-4 py-3 text-white outline-none transition focus:border-red-500"
+                  placeholder={t.placeholderPassword}
+                />
+              </label>
+            )}
 
             <div className="flex gap-3 pt-1">
               <button
@@ -582,7 +704,7 @@ export default function ItRelationPage() {
                 disabled={deleting}
                 type="submit"
                 className="flex-1 bg-red-600 px-5 py-3.5 text-xs font-bold tracking-[0.15em] text-white transition hover:bg-red-500 disabled:bg-neutral-700">
-                {deleting ? t.deleting : t.btnConfirmDelete}
+                {deleting ? t.deleting : isAdmin ? (lang === "th" ? "ยืนยันลบทีมทันที" : "Delete Team Immediately") : t.btnConfirmDelete}
               </button>
             </div>
           </form>
