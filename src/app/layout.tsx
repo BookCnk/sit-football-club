@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, Inter } from "next/font/google";
+import { Space_Grotesk, Inter, Kanit } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -15,6 +15,12 @@ const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
   weight: ["300", "400", "500", "600"],
+});
+
+const kanit = Kanit({
+  subsets: ["thai", "latin"],
+  variable: "--font-kanit",
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -37,8 +43,8 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
-      className={`${spaceGrotesk.variable} ${inter.variable} scroll-smooth`}>
+      lang="th"
+      className={`${spaceGrotesk.variable} ${inter.variable} ${kanit.variable} scroll-smooth`}>
       <body className="antialiased selection:bg-red-900 selection:text-white">
         {/* Ambient Background Grain */}
         <div

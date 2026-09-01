@@ -1,7 +1,5 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   ChevronLeft,
@@ -9,7 +7,6 @@ import {
   Eye,
   Loader2,
   PackageSearch,
-  ShieldCheck,
   Trash2,
 } from "lucide-react";
 import {
@@ -18,7 +15,6 @@ import {
   useUpdateOrderStatus,
 } from "@/api/features/orders/ordersHooks";
 import type { OrderStatus, ShopOrder } from "@/api/features/orders/ordersTypes";
-import { useAuth } from "@/hooks/useAuth";
 import { getErrorMessage, useToast } from "@/hooks/useToast";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import SystemModal from "@/components/ui/SystemModal";
@@ -49,23 +45,21 @@ function formatDate(date: string) {
 
 function getStatusClassName(status: string) {
   if (status === "completed") {
-    return "border-emerald-500/30 bg-emerald-500/10 text-emerald-100";
+    return "border-emerald-500/30 bg-emerald-500/10 text-emerald-300";
   }
 
   if (status === "verified") {
-    return "border-sky-500/30 bg-sky-500/10 text-sky-100";
+    return "border-sky-500/30 bg-sky-500/10 text-sky-300";
   }
 
   if (status === "cancelled") {
-    return "border-red-500/30 bg-red-500/10 text-red-100";
+    return "border-red-500/30 bg-red-500/10 text-red-300";
   }
 
-  return "border-amber-500/30 bg-amber-500/10 text-amber-100";
+  return "border-amber-500/30 bg-amber-500/10 text-amber-300";
 }
 
 export default function DashboardOrdersPage() {
-  const router = useRouter();
-  const { user, loading: authLoading, logout } = useAuth();
   const toast = useToast();
 
   const [page, setPage] = useState(1);
@@ -88,19 +82,8 @@ export default function DashboardOrdersPage() {
   const pagination = ordersQuery.data?.pagination;
 
   useEffect(() => {
-    if (!authLoading && (!user || user.role !== "admin")) {
-      router.replace("/login");
-    }
-  }, [authLoading, router, user]);
-
-  useEffect(() => {
     setPage(1);
   }, [statusFilter, search]);
-
-  async function handleLogout() {
-    await logout();
-    router.replace("/login");
-  }
 
   async function handleStatusChange(order: ShopOrder, status: OrderStatus) {
     try {
@@ -153,285 +136,228 @@ export default function DashboardOrdersPage() {
     setSearch(searchInput.trim());
   }
 
-  if (authLoading || (!user && !authLoading)) {
-    return (
-      <div className="min-h-screen bg-[#050505] px-6 pt-32 pb-24 text-white">
-        <div className="mx-auto flex max-w-7xl items-center gap-3 text-sm text-neutral-400">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          Checking admin access...
+  return (
+    <div className="space-y-8">
+      {/* PAGE HEADER */}
+      <div className="border-b border-white/10 pb-6">
+        <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-red-500">
+          ORDERS MANAGEMENT
+        </div>
+        <h1 className="mt-1 font-display text-3xl font-bold tracking-tight sm:text-4xl">
+          Customer Orders & Slips
+        </h1>
+        <p className="mt-2 text-sm text-neutral-400">
+          Review incoming purchases, inspect transfer slips, and update order statuses.
+        </p>
+      </div>
+
+      {/* FILTER & SEARCH */}
+      <div className="grid gap-4 lg:grid-cols-[1fr,240px]">
+        <form
+          onSubmit={applySearch}
+          className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-[#090909] p-4 md:flex-row">
+          <input
+            value={searchInput}
+            onChange={(event) => setSearchInput(event.target.value)}
+            placeholder="Search by email, phone, custom name, or product..."
+            className="min-w-0 flex-1 rounded-xl border border-white/15 bg-white/[0.04] px-4 py-2.5 text-sm text-white outline-none transition focus:border-red-500"
+          />
+          <button
+            type="submit"
+            className="rounded-xl bg-red-600 px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-white transition hover:bg-red-500">
+            Search
+          </button>
+        </form>
+
+        <div className="rounded-2xl border border-white/10 bg-[#090909] p-4 flex flex-col justify-center">
+          <select
+            value={statusFilter}
+            onChange={(event) =>
+              setStatusFilter(event.target.value as "all" | OrderStatus)
+            }
+            className="w-full rounded-xl border border-white/15 bg-[#111] px-4 py-2.5 text-xs uppercase tracking-wider text-white outline-none transition focus:border-red-500">
+            <option value="all">Filter: All Statuses</option>
+            {ORDER_STATUSES.map((status) => (
+              <option key={status} value={status}>
+                Status: {status}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
-    );
-  }
 
-  if (!user || user.role !== "admin") {
-    return null;
-  }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-[#050505] via-[#0b0b0b] to-[#050505] text-white">
-      <div className="fixed inset-0 pointer-events-none bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:100px_100px]" />
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_right,rgba(220,38,38,0.14),transparent_35%),radial-gradient(circle_at_top_left,rgba(255,255,255,0.06),transparent_30%)]" />
-
-      <section className="relative z-10 mx-auto max-w-7xl px-6 pb-24 pt-32">
-        <div className="mb-10 flex flex-col gap-6 border-b border-white/10 pb-8 lg:flex-row lg:items-end lg:justify-between">
+      {/* ORDERS TABLE SECTION */}
+      <section className="rounded-3xl border border-white/10 bg-[#090909] p-6 shadow-2xl">
+        <div className="mb-6 flex flex-col gap-3 border-b border-white/10 pb-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <div className="mb-3 flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] text-red-500">
-              <ShieldCheck className="h-4 w-4" />
-              Admin Orders
+            <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-neutral-500">
+              Orders Table
             </div>
-            <h1 className="font-display text-4xl font-semibold tracking-tight md:text-6xl">
-              Manage Orders
-              <span className="block text-neutral-500">
-                Review slips and update status
-              </span>
-            </h1>
-            <p className="mt-4 max-w-2xl text-sm leading-6 text-neutral-400">
-              Review incoming orders, verify payment slips, and keep order
-              status updated without leaving the admin panel.
-            </p>
+            <h2 className="mt-1 font-display text-2xl font-semibold tracking-tight">
+              Order Records
+            </h2>
           </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs uppercase tracking-widest text-neutral-300">
-              {user.email}
-            </div>
-            <Link
-              href="/dashboard"
-              className="rounded-full border border-white/10 px-4 py-2 text-xs uppercase tracking-widest text-neutral-300 transition-colors hover:border-white/30 hover:text-white">
-              Back to Shop Admin
-            </Link>
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="rounded-full border border-red-500/30 bg-red-500/10 px-4 py-2 text-xs uppercase tracking-widest text-red-200 transition-colors hover:border-red-400/50 hover:bg-red-500/20">
-              Sign Out
-            </button>
+          <div className="text-xs font-mono text-neutral-400">
+            {pagination
+              ? `Total: ${pagination.total} orders`
+              : "Loading orders..."}
           </div>
         </div>
 
-        <div className="mb-8 grid gap-4 lg:grid-cols-[1fr,220px]">
-          <form
-            onSubmit={applySearch}
-            className="flex flex-col gap-3 rounded-3xl border border-white/10 bg-neutral-950/80 p-5 md:flex-row">
-            <input
-              value={searchInput}
-              onChange={(event) => setSearchInput(event.target.value)}
-              placeholder="Search by email, phone, screen name, or item"
-              className="min-w-0 flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-white/30"
-            />
-            <button
-              type="submit"
-              className="rounded-2xl bg-white px-5 py-3 text-xs font-bold uppercase tracking-widest text-black transition-transform hover:scale-[1.01]">
-              Search
-            </button>
-          </form>
-
-          <div className="rounded-3xl border border-white/10 bg-neutral-950/80 p-5">
-            <div className="mb-2 text-[10px] uppercase tracking-[0.25em] text-neutral-500">
-              Status Filter
-            </div>
-            <select
-              value={statusFilter}
-              onChange={(event) =>
-                setStatusFilter(event.target.value as "all" | OrderStatus)
-              }
-              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-white/30">
-              <option value="all">All statuses</option>
-              {ORDER_STATUSES.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
+        {ordersQuery.isLoading ? (
+          <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-5 text-sm text-neutral-400">
+            <Loader2 className="h-4 w-4 animate-spin text-red-500" />
+            Loading orders...
           </div>
-        </div>
-
-        <section className="rounded-3xl border border-white/10 bg-neutral-950/80 p-6 shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
-          <div className="mb-6 flex flex-col gap-3 border-b border-white/10 pb-5 md:flex-row md:items-end md:justify-between">
-            <div>
-              <div className="text-[10px] uppercase tracking-[0.3em] text-neutral-500">
-                Orders
-              </div>
-              <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight">
-                Paginated Order Table
-              </h2>
-            </div>
-            <div className="text-sm text-neutral-500">
-              {pagination
-                ? `${pagination.total} total orders`
-                : "Loading orders..."}
+        ) : ordersQuery.error ? (
+          <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-5 text-sm text-red-100">
+            {ordersQuery.error instanceof Error
+              ? ordersQuery.error.message
+              : "Failed to load orders."}
+          </div>
+        ) : orders.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 px-4 py-16 text-center">
+            <PackageSearch className="mb-4 h-8 w-8 text-neutral-600" />
+            <div className="text-sm text-neutral-400">
+              No orders matching this search or filter criteria.
             </div>
           </div>
-
-          {ordersQuery.isLoading ? (
-            <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-5 text-sm text-neutral-400">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Loading orders...
-            </div>
-          ) : ordersQuery.error ? (
-            <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-5 text-sm text-red-100">
-              {ordersQuery.error instanceof Error
-                ? ordersQuery.error.message
-                : "Failed to load orders."}
-            </div>
-          ) : orders.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 px-4 py-16 text-center">
-              <PackageSearch className="mb-4 h-8 w-8 text-neutral-600" />
-              <div className="text-sm text-neutral-400">
-                No orders found for this filter.
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="overflow-x-auto">
-                <table className="min-w-full border-separate border-spacing-y-3">
-                  <thead>
-                    <tr className="text-left text-[10px] uppercase tracking-[0.25em] text-neutral-500">
-                      <th className="px-4 py-2">Order</th>
-                      <th className="px-4 py-2">Item</th>
-                      <th className="px-4 py-2">Contact</th>
-                      <th className="px-4 py-2">Customization</th>
-                      <th className="px-4 py-2">Slip</th>
-                      <th className="px-4 py-2">Status</th>
-                      <th className="px-4 py-2">Created</th>
-                      <th className="px-4 py-2">Actions</th>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="min-w-full border-separate border-spacing-y-3">
+                <thead>
+                  <tr className="text-left font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-500">
+                    <th className="px-4 py-2">Order</th>
+                    <th className="px-4 py-2">Product Item</th>
+                    <th className="px-4 py-2">Contact</th>
+                    <th className="px-4 py-2">Custom Details</th>
+                    <th className="px-4 py-2">Slip</th>
+                    <th className="px-4 py-2">Status</th>
+                    <th className="px-4 py-2">Date</th>
+                    <th className="px-4 py-2">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.map((order) => (
+                    <tr key={order.id} className="bg-white/[0.03]">
+                      <td className="rounded-l-2xl border-y border-l border-white/10 px-4 py-4 align-top">
+                        <div className="font-display text-base font-bold text-white">
+                          #{order.id}
+                        </div>
+                        <div className="mt-1 font-mono text-xs text-red-400">
+                          THB {Number(order.shopItem.price).toLocaleString()}
+                        </div>
+                      </td>
+                      <td className="border-y border-white/10 px-4 py-4 align-top">
+                        <div className="font-medium text-white">
+                          {order.shopItem.name}
+                        </div>
+                        <div className="mt-1 text-xs text-neutral-400">
+                          {order.shopItem.subtitle || "Official Merchandise"}
+                        </div>
+                      </td>
+                      <td className="border-y border-white/10 px-4 py-4 align-top text-xs text-neutral-300">
+                        <div>Phone: {order.contactPhone}</div>
+                        <div className="mt-1 text-neutral-400">
+                          Email: {order.contactEmail}
+                        </div>
+                      </td>
+                      <td className="border-y border-white/10 px-4 py-4 align-top text-xs text-neutral-300">
+                        <div>Size: {order.selectedSize || "-"}</div>
+                        <div className="mt-1">
+                          Name: {order.screenName || "-"}
+                        </div>
+                        <div className="mt-1">
+                          Number: {order.screenNumber || "-"}
+                        </div>
+                      </td>
+                      <td className="border-y border-white/10 px-4 py-4 align-top">
+                        <button
+                          onClick={() => setSelectedSlip(order.slipImageUrl)}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs font-semibold text-neutral-300 transition hover:border-white/30 hover:text-white">
+                          <Eye className="h-3.5 w-3.5" />
+                          View Slip
+                        </button>
+                      </td>
+                      <td className="border-y border-white/10 px-4 py-4 align-top">
+                        <select
+                          value={order.status}
+                          onChange={(event) =>
+                            handleStatusChange(
+                              order,
+                              event.target.value as OrderStatus,
+                            )
+                          }
+                          disabled={updateStatus.isPending}
+                          className={`rounded-lg border px-3 py-1.5 text-xs font-bold uppercase tracking-wider outline-none transition appearance-none bg-[#111] cursor-pointer ${getStatusClassName(
+                            order.status,
+                          )}`}>
+                          {ORDER_STATUSES.map((status) => (
+                            <option
+                              key={status}
+                              value={status}
+                              className="bg-neutral-900 text-white">
+                              {status}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="border-y border-white/10 px-4 py-4 align-top text-xs text-neutral-400 font-mono">
+                        {formatDate(order.createdAt)}
+                      </td>
+                      <td className="rounded-r-2xl border-y border-r border-white/10 px-4 py-4 align-top">
+                        <button
+                          type="button"
+                          onClick={() => requestDelete(order)}
+                          disabled={deleteOrder.isPending}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-300 transition hover:border-red-500 hover:bg-red-500 hover:text-white disabled:opacity-50">
+                          <Trash2 className="h-3.5 w-3.5" />
+                          Delete
+                        </button>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {orders.map((order) => (
-                      <tr key={order.id} className="bg-white/[0.03]">
-                        <td className="rounded-l-2xl border-y border-l border-white/10 px-4 py-4 align-top">
-                          <div className="font-display text-lg font-semibold">
-                            #{order.id}
-                          </div>
-                          <div className="mt-1 text-xs uppercase tracking-widest text-neutral-500">
-                            THB {Number(order.shopItem.price).toLocaleString()}
-                          </div>
-                        </td>
-                        <td className="border-y border-white/10 px-4 py-4 align-top">
-                          <div className="font-medium text-white">
-                            {order.shopItem.name}
-                          </div>
-                          <div className="mt-1 text-sm text-neutral-400">
-                            {order.shopItem.subtitle || "Official Merchandise"}
-                          </div>
-                        </td>
-                        <td className="border-y border-white/10 px-4 py-4 align-top text-sm text-neutral-300">
-                          <div>{order.contactPhone}</div>
-                          <div className="mt-1 text-neutral-500">
-                            {order.contactEmail}
-                          </div>
-                        </td>
-                        <td className="border-y border-white/10 px-4 py-4 align-top text-sm text-neutral-300">
-                          <div>Size: {order.selectedSize || "-"}</div>
-                          <div className="mt-1">
-                            Name: {order.screenName || "-"}
-                          </div>
-                          <div className="mt-1">
-                            Number: {order.screenNumber || "-"}
-                          </div>
-                        </td>
-                        <td className="border-y border-white/10 px-4 py-4 align-top">
-                          <button
-                            onClick={() => setSelectedSlip(order.slipImageUrl)}
-                            className="inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-2 text-xs uppercase tracking-widest text-neutral-300 transition-colors hover:border-white/30 hover:text-white">
-                            <Eye className="h-4 w-4" />
-                            View Slip
-                          </button>
-                        </td>
-                        <td className="border-y border-white/10 px-4 py-4 align-top">
-                          <div className="relative">
-                            <select
-                              value={order.status}
-                              onChange={(event) =>
-                                handleStatusChange(
-                                  order,
-                                  event.target.value as OrderStatus,
-                                )
-                              }
-                              disabled={updateStatus.isPending}
-                              className={`rounded-full border px-8 py-2 pr-10 text-xs uppercase tracking-widest outline-none transition-colors appearance-none bg-transparent cursor-pointer ${getStatusClassName(order.status)}`}>
-                              {ORDER_STATUSES.map((status) => (
-                                <option
-                                  key={status}
-                                  value={status}
-                                  className="bg-neutral-900 text-white border-none">
-                                  {status}
-                                </option>
-                              ))}
-                            </select>
-                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                              <svg
-                                className="h-3 w-3"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M19 9l-7 7-7-7"
-                                />
-                              </svg>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="border-y border-white/10 px-4 py-4 align-top text-sm text-neutral-400">
-                          {formatDate(order.createdAt)}
-                        </td>
-                        <td className="rounded-r-2xl border-y border-r border-white/10 px-4 py-4 align-top">
-                          <button
-                            type="button"
-                            onClick={() => requestDelete(order)}
-                            disabled={deleteOrder.isPending}
-                            className="inline-flex items-center gap-2 rounded-full border border-red-500/30 px-3 py-2 text-xs uppercase tracking-widest text-red-200 transition-colors hover:border-red-400/50 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50">
-                            <Trash2 className="h-4 w-4" />
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-              <div className="mt-6 flex flex-col gap-3 border-t border-white/10 pt-5 md:flex-row md:items-center md:justify-between">
-                <div className="text-sm text-neutral-500">
-                  Page {pagination?.page ?? 1} of {pagination?.totalPages ?? 1}
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setPage((current) => Math.max(1, current - 1))
-                    }
-                    disabled={!pagination || pagination.page <= 1}
-                    className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-xs uppercase tracking-widest text-neutral-300 transition-colors hover:border-white/30 hover:text-white disabled:cursor-not-allowed disabled:opacity-40">
-                    <ChevronLeft className="h-4 w-4" />
-                    Prev
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setPage((current) =>
-                        pagination
-                          ? Math.min(pagination.totalPages, current + 1)
-                          : current + 1,
-                      )
-                    }
-                    disabled={
-                      !pagination || pagination.page >= pagination.totalPages
-                    }
-                    className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-xs uppercase tracking-widest text-neutral-300 transition-colors hover:border-white/30 hover:text-white disabled:cursor-not-allowed disabled:opacity-40">
-                    Next
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
-                </div>
+            {/* PAGINATION */}
+            <div className="mt-6 flex flex-col gap-3 border-t border-white/10 pt-4 md:flex-row md:items-center md:justify-between">
+              <div className="text-xs font-mono text-neutral-400">
+                Page {pagination?.page ?? 1} of {pagination?.totalPages ?? 1}
               </div>
-            </>
-          )}
-        </section>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setPage((current) => Math.max(1, current - 1))
+                  }
+                  disabled={!pagination || pagination.page <= 1}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-4 py-2 text-xs font-semibold text-neutral-300 transition hover:border-white/30 hover:text-white disabled:opacity-40">
+                  <ChevronLeft className="h-4 w-4" />
+                  Prev
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setPage((current) =>
+                      pagination
+                        ? Math.min(pagination.totalPages, current + 1)
+                        : current + 1,
+                    )
+                  }
+                  disabled={
+                    !pagination || pagination.page >= pagination.totalPages
+                  }
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-4 py-2 text-xs font-semibold text-neutral-300 transition hover:border-white/30 hover:text-white disabled:opacity-40">
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </section>
 
       <ConfirmModal
@@ -455,8 +381,7 @@ export default function DashboardOrdersPage() {
         onClose={() => setSelectedSlip(null)}
         title="Payment Slip"
         description="Review the uploaded transfer slip before approving the order."
-        maxWidthClassName="max-w-4xl"
-      >
+        maxWidthClassName="max-w-4xl">
         {selectedSlip && (
           <div>
             <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/40 p-2">
@@ -471,8 +396,7 @@ export default function DashboardOrdersPage() {
                 href={selectedSlip}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-xs font-bold uppercase tracking-widest text-neutral-300 transition-colors hover:border-white/30 hover:text-white"
-              >
+                className="inline-flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-xs font-bold uppercase tracking-widest text-neutral-300 transition hover:border-white/30 hover:text-white">
                 <Eye className="h-4 w-4" />
                 Open In New Tab
               </a>

@@ -91,3 +91,50 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "แก้ไขทีมไม่สำเร็จ" }, { status: 500 });
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { name, generation, password } = body ?? {};
+
+    if (
+      typeof name !== "string" ||
+      !name.trim() ||
+      typeof generation !== "string" ||
+      !generation.trim() ||
+      typeof password !== "string" ||
+      password.length < 6
+    ) {
+      return NextResponse.json(
+        { error: "กรอกข้อมูลไม่ครบถ้วน หรือรหัสอย่างน้อย 6 ตัวอักษร" },
+        { status: 400 },
+      );
+    }
+
+    const existing = await prisma.tournamentTeam.findUnique({
+      where: {
+        name_generation: {
+          name: name.trim(),
+          generation: generation.trim(),
+        },
+      },
+    });
+
+    if (!existing || !(await verifyPassword(password, existing.passwordHash))) {
+      return NextResponse.json(
+        { error: "ไม่พบทีม หรือรหัสทีมไม่ถูกต้อง" },
+        { status: 401 },
+      );
+    }
+
+    await prisma.tournamentTeam.delete({
+      where: { id: existing.id },
+    });
+
+    return NextResponse.json({ success: true, id: existing.id });
+  } catch (error) {
+    console.error("[DELETE /api/tournament-teams]", error);
+    return NextResponse.json({ error: "ลบทีมไม่สำเร็จ" }, { status: 500 });
+  }
+}
+

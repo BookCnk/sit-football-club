@@ -1,10 +1,8 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Loader2, Package, PencilLine, Plus, ShieldCheck, Trash2 } from 'lucide-react';
+import { Loader2, Package, PencilLine, Plus, Trash2 } from 'lucide-react';
 import {
   useCreateShopItem,
   useDeleteShopItem,
@@ -12,7 +10,6 @@ import {
   useUpdateShopItem,
 } from '@/api/features/shop-items/shopItemsHooks';
 import type { CreateShopItemInput, ShopItem } from '@/api/features/shop-items/shopItemsTypes';
-import { useAuth } from '@/hooks/useAuth';
 import { getErrorMessage, useToast } from '@/hooks/useToast';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 
@@ -139,8 +136,6 @@ function formatDate(date: string) {
 }
 
 export default function DashboardPage() {
-  const router = useRouter();
-  const { user, loading: authLoading, logout } = useAuth();
   const toast = useToast();
   const { data, isLoading, error } = useShopItems();
   const createItem = useCreateShopItem();
@@ -162,12 +157,6 @@ export default function DashboardPage() {
     }
   }
   const merchCount = items.length - jerseyCount;
-
-  useEffect(() => {
-    if (!authLoading && (!user || user.role !== 'admin')) {
-      router.replace('/login');
-    }
-  }, [authLoading, router, user]);
 
   useEffect(() => {
     if (!selectedItem) {
@@ -192,11 +181,6 @@ export default function DashboardPage() {
       ...current,
       [field]: value,
     }));
-  }
-
-  async function handleLogout() {
-    await logout();
-    router.replace('/login');
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -271,400 +255,341 @@ export default function DashboardPage() {
     }
   }
 
-  if (authLoading || (!user && !authLoading)) {
-    return (
-      <div className="min-h-screen bg-[#050505] px-6 pt-32 pb-24 text-white">
-        <div className="mx-auto flex max-w-7xl items-center gap-3 text-sm text-neutral-400">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          Checking admin access...
+  return (
+    <div className="space-y-8">
+      {/* PAGE HEADER */}
+      <div className="border-b border-white/10 pb-6">
+        <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-red-500">
+          INVENTORY MANAGEMENT
+        </div>
+        <h1 className="mt-1 font-display text-3xl font-bold tracking-tight sm:text-4xl">
+          Shop Items & Products
+        </h1>
+        <p className="mt-2 text-sm text-neutral-400">
+          Create, update, and manage products displayed on the SIT FC storefront.
+        </p>
+      </div>
+
+      {/* STATS SUMMARY CARDS */}
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
+        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+          <div className="text-[10px] font-mono uppercase tracking-[0.25em] text-neutral-500">
+            Total Items
+          </div>
+          <div className="mt-1 font-display text-3xl font-semibold text-white">{items.length}</div>
+        </div>
+        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+          <div className="text-[10px] font-mono uppercase tracking-[0.25em] text-neutral-500">
+            Jersey Kits
+          </div>
+          <div className="mt-1 font-display text-3xl font-semibold text-white">{jerseyCount}</div>
+        </div>
+        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+          <div className="text-[10px] font-mono uppercase tracking-[0.25em] text-neutral-500">
+            Merchandise
+          </div>
+          <div className="mt-1 font-display text-3xl font-semibold text-white">{merchCount}</div>
         </div>
       </div>
-    );
-  }
 
-  if (!user || user.role !== 'admin') {
-    return null;
-  }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-[#050505] via-[#0b0b0b] to-[#050505] text-white">
-      <div className="fixed inset-0 pointer-events-none bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:100px_100px]" />
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_right,rgba(220,38,38,0.14),transparent_35%),radial-gradient(circle_at_top_left,rgba(255,255,255,0.06),transparent_30%)]" />
-
-      <section className="relative z-10 mx-auto max-w-7xl px-6 pb-24 pt-32">
-        <div className="mb-10 flex flex-col gap-6 border-b border-white/10 pb-8 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <div className="mb-3 flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] text-red-500">
-              <ShieldCheck className="h-4 w-4" />
-              Admin Dashboard
+      {/* TWO COLUMN GRID: CATALOGUE & EDITOR */}
+      <div className="grid gap-8 xl:grid-cols-[1.05fr,1.35fr]">
+        {/* CATALOGUE LIST */}
+        <section className="rounded-3xl border border-white/10 bg-[#090909] p-6 shadow-2xl">
+          <div className="mb-6 flex items-center justify-between gap-4 border-b border-white/10 pb-4">
+            <div>
+              <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-neutral-500">
+                Catalogue
+              </div>
+              <h2 className="mt-1 font-display text-2xl font-semibold tracking-tight">
+                Product List
+              </h2>
             </div>
-            <h1 className="font-display text-4xl font-semibold tracking-tight md:text-6xl">
-              Manage Shop
-              <span className="block text-neutral-500">Inventory and Content</span>
-            </h1>
-            <p className="mt-4 max-w-2xl text-sm leading-6 text-neutral-400">
-              Create, update, and remove shop items that power the storefront. Changes here affect
-              the live catalogue and product detail pages.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs uppercase tracking-widest text-neutral-300">
-              {user.email}
-            </div>
-            <Link
-              href="/shop"
-              className="rounded-full border border-white/10 px-4 py-2 text-xs uppercase tracking-widest text-neutral-300 transition-colors hover:border-white/30 hover:text-white"
-            >
-              View Shop
-            </Link>
-            <Link
-              href="/dashboard/orders"
-              className="rounded-full border border-white/10 px-4 py-2 text-xs uppercase tracking-widest text-neutral-300 transition-colors hover:border-white/30 hover:text-white"
-            >
-              View Orders
-            </Link>
             <button
               type="button"
-              onClick={handleLogout}
-              className="rounded-full border border-red-500/30 bg-red-500/10 px-4 py-2 text-xs uppercase tracking-widest text-red-200 transition-colors hover:border-red-400/50 hover:bg-red-500/20"
+              onClick={resetForm}
+              className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-bold uppercase tracking-widest text-neutral-200 transition hover:border-white/30 hover:bg-white/10 hover:text-white"
             >
-              Sign Out
+              <Plus className="h-4 w-4" />
+              New Item
             </button>
           </div>
-        </div>
 
-        <div className="mb-8 grid gap-4 md:grid-cols-3">
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-            <div className="mb-2 text-[10px] uppercase tracking-[0.25em] text-neutral-500">
-              Total Items
+          {isLoading ? (
+            <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-5 text-sm text-neutral-400">
+              <Loader2 className="h-4 w-4 animate-spin text-red-500" />
+              Loading shop items...
             </div>
-            <div className="font-display text-3xl font-semibold">{items.length}</div>
-          </div>
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-            <div className="mb-2 text-[10px] uppercase tracking-[0.25em] text-neutral-500">
-              Jersey Items
+          ) : error ? (
+            <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-5 text-sm text-red-100">
+              {error instanceof Error ? error.message : 'Failed to load shop items.'}
             </div>
-            <div className="font-display text-3xl font-semibold">{jerseyCount}</div>
-          </div>
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-            <div className="mb-2 text-[10px] uppercase tracking-[0.25em] text-neutral-500">
-              Merchandise
+          ) : items.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-white/10 px-4 py-10 text-center text-sm text-neutral-500">
+              No products yet. Create the first shop item using the editor form.
             </div>
-            <div className="font-display text-3xl font-semibold">{merchCount}</div>
-          </div>
-        </div>
+          ) : (
+            <div className="space-y-3 max-h-[75vh] overflow-y-auto pr-1">
+              {items.map((item) => {
+                const image = getPrimaryImage(item.images);
+                const isSelected = selectedId === item.id;
 
-        <div className="grid gap-8 xl:grid-cols-[1.05fr,1.35fr]">
-          <section className="rounded-3xl border border-white/10 bg-neutral-950/80 p-6 shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
-            <div className="mb-6 flex items-center justify-between gap-4">
-              <div>
-                <div className="text-[10px] uppercase tracking-[0.3em] text-neutral-500">
-                  Catalogue
-                </div>
-                <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight">
-                  Existing Shop Items
-                </h2>
+                return (
+                  <div
+                    key={item.id}
+                    className={`rounded-2xl border p-4 transition ${
+                      isSelected
+                        ? 'border-red-500/50 bg-red-500/10'
+                        : 'border-white/10 bg-white/[0.03] hover:border-white/20'
+                    }`}
+                  >
+                    <div className="flex gap-4">
+                      <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-neutral-900">
+                        <Image
+                          src={image}
+                          alt={item.name}
+                          fill
+                          sizes="80px"
+                          className="object-contain p-2"
+                        />
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-1 flex flex-wrap items-center gap-2">
+                          <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-500">
+                            #{item.id}
+                          </span>
+                          {item.badge && (
+                            <span className="rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] uppercase tracking-widest text-neutral-200">
+                              {item.badge}
+                            </span>
+                          )}
+                        </div>
+
+                        <h3 className="truncate font-display text-lg font-semibold tracking-tight">
+                          {item.name}
+                        </h3>
+                        <p className="text-xs text-neutral-400">
+                          {item.subtitle || 'Official Merchandise'}
+                        </p>
+                        <div className="mt-2 flex flex-wrap items-center gap-3 text-xs uppercase tracking-widest text-neutral-400 font-mono">
+                          <span>THB {Number(item.price).toLocaleString()}</span>
+                          <span>·</span>
+                          <span>{formatDate(item.createdAt)}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 flex items-center justify-end gap-2 border-t border-white/5 pt-3">
+                      <button
+                        type="button"
+                        onClick={() => handleEdit(item)}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs font-semibold tracking-wider text-neutral-300 transition hover:border-white/30 hover:text-white"
+                      >
+                        <PencilLine className="h-3.5 w-3.5" />
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => requestDelete(item)}
+                        disabled={deleteItem.isPending}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs font-semibold tracking-wider text-red-300 transition hover:border-red-500 hover:bg-red-500 hover:text-white disabled:opacity-50"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+
+        {/* EDITOR FORM */}
+        <section className="rounded-3xl border border-white/10 bg-[#090909] p-6 shadow-2xl">
+          <div className="mb-6 flex items-center justify-between gap-4 border-b border-white/10 pb-4">
+            <div>
+              <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-neutral-500">
+                Item Editor
               </div>
+              <h2 className="mt-1 font-display text-2xl font-semibold tracking-tight">
+                {selectedId ? 'Edit Shop Item' : 'Create New Item'}
+              </h2>
+            </div>
+            <div className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-mono tracking-wider text-neutral-300">
+              <Package className="h-3.5 w-3.5 text-red-500" />
+              {selectedId ? `ID #${selectedId}` : 'New Item Draft'}
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="grid gap-5 md:grid-cols-2">
+              <label className="space-y-1.5">
+                <span className="text-xs font-medium text-neutral-300">
+                  Item Name <span className="text-red-500">*</span>
+                </span>
+                <input
+                  value={form.name}
+                  onChange={(event) => handleChange('name', event.target.value)}
+                  className="w-full rounded-xl border border-white/15 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none transition focus:border-red-500"
+                  placeholder="e.g. SIT FC Home Kit 2026"
+                />
+              </label>
+
+              <label className="space-y-1.5">
+                <span className="text-xs font-medium text-neutral-300">Subtitle</span>
+                <input
+                  value={form.subtitle}
+                  onChange={(event) => handleChange('subtitle', event.target.value)}
+                  className="w-full rounded-xl border border-white/15 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none transition focus:border-red-500"
+                  placeholder="e.g. Official Match Jersey"
+                />
+              </label>
+            </div>
+
+            <div className="grid gap-5 md:grid-cols-2">
+              <label className="space-y-1.5">
+                <span className="text-xs font-medium text-neutral-300">
+                  Price (THB) <span className="text-red-500">*</span>
+                </span>
+                <input
+                  value={form.price}
+                  onChange={(event) => handleChange('price', event.target.value)}
+                  type="number"
+                  min="0"
+                  className="w-full rounded-xl border border-white/15 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none transition focus:border-red-500"
+                  placeholder="850"
+                />
+              </label>
+
+              <label className="space-y-1.5">
+                <span className="text-xs font-medium text-neutral-300">Badge Label</span>
+                <input
+                  value={form.badge}
+                  onChange={(event) => handleChange('badge', event.target.value)}
+                  className="w-full rounded-xl border border-white/15 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none transition focus:border-red-500"
+                  placeholder="e.g. NEW / PRE-ORDER / LIMITED"
+                />
+              </label>
+            </div>
+
+            <label className="block space-y-1.5">
+              <span className="text-xs font-medium text-neutral-300">
+                Image URLs <span className="text-red-500">*</span>
+              </span>
+              <textarea
+                value={form.imagesText}
+                onChange={(event) => handleChange('imagesText', event.target.value)}
+                rows={3}
+                className="w-full rounded-xl border border-white/15 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none transition focus:border-red-500"
+                placeholder={`/images/jersey-front.png\nhttps://example.com/jersey-back.png`}
+              />
+              <p className="text-[11px] text-neutral-500">
+                Enter image paths or full URLs separated by line breaks.
+              </p>
+            </label>
+
+            <label className="block space-y-1.5">
+              <span className="text-xs font-medium text-neutral-300">Available Sizes</span>
+              <textarea
+                value={form.sizesText}
+                onChange={(event) => handleChange('sizesText', event.target.value)}
+                rows={2}
+                className="w-full rounded-xl border border-white/15 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none transition focus:border-red-500"
+                placeholder="S, M, L, XL, 2XL"
+              />
+              <p className="text-[11px] text-neutral-500">
+                Comma-separated sizes (leave empty for merchandise with no sizes).
+              </p>
+            </label>
+
+            <label className="block space-y-1.5">
+              <span className="text-xs font-medium text-neutral-300">
+                Product Description <span className="text-red-500">*</span>
+              </span>
+              <textarea
+                value={form.description}
+                onChange={(event) => handleChange('description', event.target.value)}
+                rows={4}
+                className="w-full rounded-xl border border-white/15 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none transition focus:border-red-500"
+                placeholder="Describe fabric material, fit guidelines, and detail specs..."
+              />
+            </label>
+
+            <div className="grid gap-5 md:grid-cols-2">
+              <label className="space-y-1.5">
+                <span className="text-xs font-medium text-neutral-300">Payment Details</span>
+                <textarea
+                  value={form.payment}
+                  onChange={(event) => handleChange('payment', event.target.value)}
+                  rows={3}
+                  className="w-full rounded-xl border border-white/15 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none transition focus:border-red-500"
+                  placeholder="PromptPay / Bank Transfer details"
+                />
+              </label>
+
+              <label className="space-y-1.5">
+                <span className="text-xs font-medium text-neutral-300">Shipping Info</span>
+                <textarea
+                  value={form.shipping}
+                  onChange={(event) => handleChange('shipping', event.target.value)}
+                  rows={3}
+                  className="w-full rounded-xl border border-white/15 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none transition focus:border-red-500"
+                  placeholder="Shipping schedule and courier options"
+                />
+              </label>
+            </div>
+
+            {/* PREVIEW CARD */}
+            <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+              <div className="mb-2 text-[10px] font-mono uppercase tracking-[0.25em] text-neutral-500">
+                Live Preview
+              </div>
+              <div className="flex gap-4">
+                <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-neutral-900">
+                  <Image
+                    src={getPrimaryImage(parseStringList(form.imagesText))}
+                    alt={form.name || 'Draft item preview'}
+                    fill
+                    sizes="80px"
+                    className="object-contain p-2"
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[10px] uppercase tracking-widest text-neutral-400">
+                    {form.subtitle.trim() || 'Official Merchandise'}
+                  </div>
+                  <div className="truncate font-display text-xl font-semibold tracking-tight text-white">
+                    {form.name.trim() || 'Untitled product'}
+                  </div>
+                  <div className="mt-1 font-mono text-sm text-red-400 font-semibold">
+                    THB {Number(form.price || 0).toLocaleString()}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-3 pt-2">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-6 py-3.5 text-xs font-bold uppercase tracking-widest text-white transition hover:bg-red-500 disabled:bg-neutral-700"
+              >
+                {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                {selectedId ? 'Save Changes' : 'Create Product'}
+              </button>
               <button
                 type="button"
                 onClick={resetForm}
-                className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-xs uppercase tracking-widest text-neutral-300 transition-colors hover:border-white/30 hover:text-white"
+                className="rounded-xl border border-white/15 px-5 py-3.5 text-xs font-bold uppercase tracking-widest text-neutral-300 transition hover:border-white/40 hover:text-white"
               >
-                <Plus className="h-4 w-4" />
-                New Item
+                Reset Form
               </button>
             </div>
-
-            {isLoading ? (
-              <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-5 text-sm text-neutral-400">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Loading shop items...
-              </div>
-            ) : error ? (
-              <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-5 text-sm text-red-100">
-                {error instanceof Error ? error.message : 'Failed to load shop items.'}
-              </div>
-            ) : items.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-white/10 px-4 py-10 text-center text-sm text-neutral-500">
-                No products yet. Create the first shop item from the form.
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {items.map((item) => {
-                  const image = getPrimaryImage(item.images);
-                  const isSelected = selectedId === item.id;
-
-                  return (
-                    <div
-                      key={item.id}
-                      className={`rounded-2xl border p-4 transition-colors ${
-                        isSelected
-                          ? 'border-red-500/50 bg-red-500/10'
-                          : 'border-white/10 bg-white/[0.03] hover:border-white/20'
-                      }`}
-                    >
-                      <div className="flex gap-4">
-                        <div className="relative h-24 w-24 overflow-hidden rounded-xl border border-white/10 bg-neutral-900">
-                          <Image
-                            src={image}
-                            alt={item.name}
-                            fill
-                            sizes="96px"
-                            className="object-contain p-3"
-                          />
-                        </div>
-
-                        <div className="min-w-0 flex-1">
-                          <div className="mb-1 flex flex-wrap items-center gap-2">
-                            <span className="text-[10px] uppercase tracking-[0.25em] text-neutral-500">
-                              #{item.id}
-                            </span>
-                            {item.badge && (
-                              <span className="rounded-full border border-white/10 px-2 py-1 text-[10px] uppercase tracking-widest text-neutral-200">
-                                {item.badge}
-                              </span>
-                            )}
-                          </div>
-
-                          <h3 className="truncate font-display text-xl font-semibold tracking-tight">
-                            {item.name}
-                          </h3>
-                          <p className="mt-1 text-sm text-neutral-400">
-                            {item.subtitle || 'Official Merchandise'}
-                          </p>
-                          <div className="mt-3 flex flex-wrap items-center gap-3 text-xs uppercase tracking-widest text-neutral-500">
-                            <span>THB {Number(item.price).toLocaleString()}</span>
-                            <span>{formatDate(item.createdAt)}</span>
-                            <span>{getSizeList(item.sizes).length > 0 ? 'JERSEY' : 'MERCH'}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleEdit(item)}
-                          className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-xs uppercase tracking-widest text-neutral-300 transition-colors hover:border-white/30 hover:text-white"
-                        >
-                          <PencilLine className="h-4 w-4" />
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => requestDelete(item)}
-                          disabled={deleteItem.isPending}
-                          className="inline-flex items-center gap-2 rounded-full border border-red-500/30 px-4 py-2 text-xs uppercase tracking-widest text-red-200 transition-colors hover:border-red-400/50 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </section>
-
-          <section className="rounded-3xl border border-white/10 bg-neutral-950/80 p-6 shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
-            <div className="mb-6 flex items-center justify-between gap-4">
-              <div>
-                <div className="text-[10px] uppercase tracking-[0.3em] text-neutral-500">
-                  Editor
-                </div>
-                <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight">
-                  {selectedId ? 'Edit Shop Item' : 'Create Shop Item'}
-                </h2>
-              </div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs uppercase tracking-widest text-neutral-300">
-                <Package className="h-4 w-4" />
-                {selectedId ? `ID ${selectedId}` : 'New Draft'}
-              </div>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div className="grid gap-5 md:grid-cols-2">
-                <label className="space-y-2">
-                  <span className="text-[10px] uppercase tracking-[0.25em] text-neutral-500">
-                    Name
-                  </span>
-                  <input
-                    value={form.name}
-                    onChange={(event) => handleChange('name', event.target.value)}
-                    className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-white/30"
-                    placeholder="SIT FC Home Kit 2026"
-                  />
-                </label>
-
-                <label className="space-y-2">
-                  <span className="text-[10px] uppercase tracking-[0.25em] text-neutral-500">
-                    Subtitle
-                  </span>
-                  <input
-                    value={form.subtitle}
-                    onChange={(event) => handleChange('subtitle', event.target.value)}
-                    className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-white/30"
-                    placeholder="Official Match Jersey"
-                  />
-                </label>
-              </div>
-
-              <div className="grid gap-5 md:grid-cols-2">
-                <label className="space-y-2">
-                  <span className="text-[10px] uppercase tracking-[0.25em] text-neutral-500">
-                    Price (THB)
-                  </span>
-                  <input
-                    value={form.price}
-                    onChange={(event) => handleChange('price', event.target.value)}
-                    type="number"
-                    min="0"
-                    className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-white/30"
-                    placeholder="850"
-                  />
-                </label>
-
-                <label className="space-y-2">
-                  <span className="text-[10px] uppercase tracking-[0.25em] text-neutral-500">
-                    Badge
-                  </span>
-                  <input
-                    value={form.badge}
-                    onChange={(event) => handleChange('badge', event.target.value)}
-                    className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-white/30"
-                    placeholder="NEW / PRE-ORDER / LIMITED"
-                  />
-                </label>
-              </div>
-
-              <label className="space-y-2">
-                <span className="text-[10px] uppercase tracking-[0.25em] text-neutral-500">
-                  Images
-                </span>
-                <textarea
-                  value={form.imagesText}
-                  onChange={(event) => handleChange('imagesText', event.target.value)}
-                  rows={4}
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-white/30"
-                  placeholder={`https://example.com/image-1.png\nhttps://example.com/image-2.png`}
-                />
-                <p className="text-xs text-neutral-500">
-                  One URL per line or separated with commas. Stored as a JSON array.
-                </p>
-              </label>
-
-              <label className="space-y-2">
-                <span className="text-[10px] uppercase tracking-[0.25em] text-neutral-500">
-                  Sizes
-                </span>
-                <textarea
-                  value={form.sizesText}
-                  onChange={(event) => handleChange('sizesText', event.target.value)}
-                  rows={2}
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-white/30"
-                  placeholder="S, M, L, XL"
-                />
-                <p className="text-xs text-neutral-500">
-                  Leave empty for merchandise without size options.
-                </p>
-              </label>
-
-              <label className="space-y-2">
-                <span className="text-[10px] uppercase tracking-[0.25em] text-neutral-500">
-                  Description
-                </span>
-                <textarea
-                  value={form.description}
-                  onChange={(event) => handleChange('description', event.target.value)}
-                  rows={5}
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-white/30"
-                  placeholder="Describe the item, material, fit, and club details."
-                />
-              </label>
-
-              <div className="grid gap-5 md:grid-cols-2">
-                <label className="space-y-2">
-                  <span className="text-[10px] uppercase tracking-[0.25em] text-neutral-500">
-                    Payment
-                  </span>
-                  <textarea
-                    value={form.payment}
-                    onChange={(event) => handleChange('payment', event.target.value)}
-                    rows={4}
-                    className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-white/30"
-                    placeholder="PromptPay / Bank Transfer details"
-                  />
-                </label>
-
-                <label className="space-y-2">
-                  <span className="text-[10px] uppercase tracking-[0.25em] text-neutral-500">
-                    Shipping
-                  </span>
-                  <textarea
-                    value={form.shipping}
-                    onChange={(event) => handleChange('shipping', event.target.value)}
-                    rows={4}
-                    className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-white/30"
-                    placeholder="Shipping time, courier, pickup option"
-                  />
-                </label>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <div className="mb-3 text-[10px] uppercase tracking-[0.25em] text-neutral-500">
-                  Preview
-                </div>
-                <div className="flex gap-4">
-                  <div className="relative h-24 w-24 overflow-hidden rounded-xl border border-white/10 bg-neutral-900">
-                    <Image
-                      src={getPrimaryImage(parseStringList(form.imagesText))}
-                      alt={form.name || 'Draft item preview'}
-                      fill
-                      sizes="96px"
-                      className="object-contain p-3"
-                    />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="mb-1 text-xs uppercase tracking-widest text-neutral-500">
-                      {form.subtitle.trim() || 'Official Merchandise'}
-                    </div>
-                    <div className="truncate font-display text-2xl font-semibold tracking-tight">
-                      {form.name.trim() || 'Untitled item'}
-                    </div>
-                    <div className="mt-2 text-sm text-neutral-400">
-                      THB {Number(form.price || 0).toLocaleString()}
-                    </div>
-                    {form.badge.trim() && (
-                      <div className="mt-3 inline-flex rounded-full border border-white/10 px-3 py-1 text-[10px] uppercase tracking-widest text-neutral-200">
-                        {form.badge.trim()}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-3 pt-2">
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-xs font-bold uppercase tracking-widest text-black transition-transform hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                  {selectedId ? 'Save Changes' : 'Create Item'}
-                </button>
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className="rounded-full border border-white/10 px-5 py-3 text-xs font-bold uppercase tracking-widest text-neutral-300 transition-colors hover:border-white/30 hover:text-white"
-                >
-                  Reset
-                </button>
-              </div>
-            </form>
-          </section>
-        </div>
-      </section>
+          </form>
+        </section>
+      </div>
 
       <ConfirmModal
         open={Boolean(itemToDelete)}

@@ -12,14 +12,18 @@ html {
 }
 
 body {
-  font-family: var(--font-inter), sans-serif;
+  font-family: var(--font-inter), var(--font-kanit), sans-serif;
   background-color: #030303;
   color: #ffffff;
   overflow-x: hidden;
 }
 
 h1, h2, h3, h4, .font-display {
-  font-family: var(--font-space-grotesk), sans-serif;
+  font-family: var(--font-space-grotesk), var(--font-kanit), sans-serif;
+}
+
+.font-kanit {
+  font-family: var(--font-kanit), var(--font-inter), sans-serif !important;
 }
 
 /* Custom Scrollbar */
@@ -151,4 +155,3 @@ h1, h2, h3, h4, .font-display {
   from { opacity: 0; transform: translateY(14px) scale(0.98); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
-
