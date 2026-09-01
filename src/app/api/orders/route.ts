@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { adminErrorResponse, requireAdmin } from '@/lib/requireAdmin';
 import { createAdminClient, ensurePublicBucket } from '@/lib/supabase/admin';
 
+export const dynamic = 'force-dynamic';
+
 const ORDER_SLIP_BUCKET =
   process.env.NEXT_PUBLIC_SUPABASE_ORDER_SLIP_BUCKET || 'payment-slips';
 const MAX_SLIP_SIZE_BYTES = 5 * 1024 * 1024;

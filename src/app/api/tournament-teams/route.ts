@@ -3,6 +3,8 @@ import { hashPassword, verifyPassword } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/requireAdmin";
 
+export const dynamic = 'force-dynamic';
+
 const departments = ["IT", "CS", "DSI"] as const;
 
 const teamSelect = {
