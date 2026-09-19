@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { MapPin, Navigation, ExternalLink } from "lucide-react";
 import SystemModal from "@/components/ui/SystemModal";
 
 type Match = {
@@ -12,26 +13,98 @@ type Match = {
 };
 
 const matches: Match[] = [
-  { time: "10:00 – 10:30", pitch1: { tag: "A1", teams: "IT22  VS  IT32" }, pitch2: { tag: "—", teams: "สนามยังไม่เปิด", tone: "muted" } },
-  { time: "10:30 – 11:00", pitch1: { tag: "A2", teams: "IT27  VS  IT16+17" }, pitch2: { tag: "—", teams: "สนามยังไม่เปิด", tone: "muted" } },
-  { time: "11:00 – 11:30", pitch1: { tag: "B1", teams: "IT31  VS  IT15" }, pitch2: { tag: "A3", teams: "IT22  VS  IT30" } },
-  { time: "11:30 – 12:00", pitch1: { tag: "B2", teams: "IT24  VS  DSI" }, pitch2: { tag: "A4", teams: "IT32  VS  IT16+17" } },
+  {
+    time: "10:00 – 10:30",
+    pitch1: { tag: "A1", teams: "IT22  VS  IT32" },
+    pitch2: { tag: "—", teams: "สนามยังไม่เปิด", tone: "muted" },
+  },
+  {
+    time: "10:30 – 11:00",
+    pitch1: { tag: "A2", teams: "IT27  VS  IT16+17" },
+    pitch2: { tag: "—", teams: "สนามยังไม่เปิด", tone: "muted" },
+  },
+  {
+    time: "11:00 – 11:30",
+    pitch1: { tag: "B1", teams: "IT31  VS  IT15" },
+    pitch2: { tag: "A3", teams: "IT22  VS  IT30" },
+  },
+  {
+    time: "11:30 – 12:00",
+    pitch1: { tag: "B2", teams: "IT24  VS  DSI" },
+    pitch2: { tag: "A4", teams: "IT32  VS  IT16+17" },
+  },
   { time: "12:00 – 12:30", lunch: "พักรับประทานอาหารกลางวัน · 30 นาที" },
-  { time: "12:30 – 13:00", pitch1: { tag: "B3", teams: "IT31  VS  IT24" }, pitch2: { tag: "A5", teams: "IT27  VS  IT30" } },
-  { time: "13:00 – 13:30", pitch1: { tag: "B4", teams: "IT15  VS  DSI" }, pitch2: { tag: "A6", teams: "IT22  VS  IT16+17" } },
-  { time: "13:30 – 14:00", pitch1: { tag: "B5", teams: "IT31  VS  DSI" }, pitch2: { tag: "A7", teams: "IT27  VS  IT32" } },
-  { time: "14:00 – 14:30", pitch1: { tag: "A8", teams: "IT27  VS  IT22" }, pitch2: { tag: "A9", teams: "IT30  VS  IT16+17" } },
-  { time: "14:30 – 15:00", pitch1: { tag: "B6", teams: "IT15  VS  IT24" }, pitch2: { tag: "A10", teams: "IT32  VS  IT30" } },
-  { time: "15:00 – 15:30", pitch1: { tag: "รอบรองฯ 1", teams: "อันดับ 1 สาย A  VS  อันดับ 2 สาย B" }, pitch2: { tag: "ปิดสนาม", teams: "สนาม 2 ปิด", tone: "muted" } },
-  { time: "15:30 – 16:00", pitch1: { tag: "รอบรองฯ 2", teams: "อันดับ 1 สาย B  VS  อันดับ 2 สาย A" }, pitch2: { tag: "ปิดสนาม", teams: "สนาม 2 ปิด", tone: "muted" } },
-  { time: "16:00 – 16:30", pitch1: { tag: "ชิงอันดับ 3", teams: "ผู้แพ้รอบรองฯ 1  VS  ผู้แพ้รอบรองฯ 2" }, pitch2: { tag: "ปิดสนาม", teams: "สนาม 2 ปิด", tone: "muted" } },
-  { time: "16:30 – 17:00", pitch1: { tag: "🏆 ชิงชนะเลิศ", teams: "ผู้ชนะรอบรองฯ 1  VS  ผู้ชนะรอบรองฯ 2", tone: "gold" }, pitch2: { tag: "ปิดสนาม", teams: "สนาม 2 ปิด", tone: "muted" } },
-  { time: "17:00 – 18:00", closing: "มอบถ้วยรางวัล · ถ่ายภาพร่วมกัน · สิ้นสุดกิจกรรม" },
+  {
+    time: "12:30 – 13:00",
+    pitch1: { tag: "B3", teams: "IT31  VS  IT24" },
+    pitch2: { tag: "A5", teams: "IT27  VS  IT30" },
+  },
+  {
+    time: "13:00 – 13:30",
+    pitch1: { tag: "B4", teams: "IT15  VS  DSI" },
+    pitch2: { tag: "A6", teams: "IT22  VS  IT16+17" },
+  },
+  {
+    time: "13:30 – 14:00",
+    pitch1: { tag: "B5", teams: "IT31  VS  DSI" },
+    pitch2: { tag: "A7", teams: "IT27  VS  IT32" },
+  },
+  {
+    time: "14:00 – 14:30",
+    pitch1: { tag: "A8", teams: "IT27  VS  IT22" },
+    pitch2: { tag: "A9", teams: "IT30  VS  IT16+17" },
+  },
+  {
+    time: "14:30 – 15:00",
+    pitch1: { tag: "B6", teams: "IT15  VS  IT24" },
+    pitch2: { tag: "A10", teams: "IT32  VS  IT30" },
+  },
+  {
+    time: "15:00 – 15:30",
+    pitch1: { tag: "รอบรองฯ 1", teams: "อันดับ 1 สาย A  VS  อันดับ 2 สาย B" },
+    pitch2: { tag: "ปิดสนาม", teams: "สนาม 2 ปิด", tone: "muted" },
+  },
+  {
+    time: "15:30 – 16:00",
+    pitch1: { tag: "รอบรองฯ 2", teams: "อันดับ 1 สาย B  VS  อันดับ 2 สาย A" },
+    pitch2: { tag: "ปิดสนาม", teams: "สนาม 2 ปิด", tone: "muted" },
+  },
+  {
+    time: "16:00 – 16:30",
+    pitch1: {
+      tag: "ชิงอันดับ 3",
+      teams: "ผู้แพ้รอบรองฯ 1  VS  ผู้แพ้รอบรองฯ 2",
+    },
+    pitch2: { tag: "ปิดสนาม", teams: "สนาม 2 ปิด", tone: "muted" },
+  },
+  {
+    time: "16:30 – 17:00",
+    pitch1: {
+      tag: "🏆 ชิงชนะเลิศ",
+      teams: "ผู้ชนะรอบรองฯ 1  VS  ผู้ชนะรอบรองฯ 2",
+      tone: "gold",
+    },
+    pitch2: { tag: "ปิดสนาม", teams: "สนาม 2 ปิด", tone: "muted" },
+  },
+  {
+    time: "17:00 – 18:00",
+    closing: "มอบถ้วยรางวัล · ถ่ายภาพร่วมกัน · สิ้นสุดกิจกรรม",
+  },
 ];
 
 const groups = [
-  { name: "GROUP A", count: "5 ทีม", games: "พบกันทั้งหมด 10 นัด", teams: ["IT27", "IT22", "IT32", "IT30", "IT16+17"] },
-  { name: "GROUP B", count: "4 ทีม", games: "พบกันทั้งหมด 6 นัด", teams: ["IT31", "IT15", "IT24", "DSI"] },
+  {
+    name: "GROUP A",
+    count: "5 ทีม",
+    games: "พบกันทั้งหมด 10 นัด",
+    teams: ["IT27", "IT22", "IT32", "IT30", "IT16+17"],
+  },
+  {
+    name: "GROUP B",
+    count: "4 ทีม",
+    games: "พบกันทั้งหมด 6 นัด",
+    teams: ["IT31", "IT15", "IT24", "DSI"],
+  },
 ];
 
 function MatchCell({
@@ -182,7 +255,7 @@ export default function ItRelationPage() {
         .filter(
           (m) =>
             (m.pitch1 && m.pitch1.teams.includes(selectedTeam)) ||
-            (m.pitch2 && m.pitch2.teams.includes(selectedTeam))
+            (m.pitch2 && m.pitch2.teams.includes(selectedTeam)),
         )
         .map((m) => {
           const isPitch1 = m.pitch1?.teams.includes(selectedTeam);
@@ -220,11 +293,26 @@ export default function ItRelationPage() {
             SIT Football Club · 2026
           </p>
           <h1 className="font-display text-3xl font-extrabold uppercase tracking-tight text-white sm:text-5xl md:text-6xl">
-            IT RELATION 
+            IT RELATION
           </h1>
           <p className="mx-auto mt-3 max-w-xl text-xs leading-relaxed text-neutral-400 sm:text-sm">
-            รอบแรก 10:00 – 15:00 น. · รอบตัดเชือกไขว้สาย & ชิงชนะเลิศ 15:00 – 17:00 น.
+            รอบแรก 10:00 – 15:00 น. · รอบตัดเชือกไขว้สาย & ชิงชนะเลิศ 15:00 –
+            17:00 น.
           </p>
+
+          {/* Location Badge */}
+          <div className="mt-3 flex items-center justify-center">
+            <a
+              href="https://maps.app.goo.gl/ZjeS4cdJpJk1EaVQ9"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full border border-red-500/25 bg-red-950/30 px-3.5 py-1.5 text-xs font-medium text-red-300 transition hover:border-red-400 hover:bg-red-900/40 hover:text-white">
+              <MapPin className="h-3.5 w-3.5 text-red-400" />
+              <span>สนามฟุตซอลพาร์ค พระราม 2</span>
+              <ExternalLink className="h-3 w-3 text-red-400/70" />
+            </a>
+          </div>
+
           <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
               type="button"
@@ -242,6 +330,42 @@ export default function ItRelationPage() {
             </button>
           </div>
         </header>
+
+        {/* Venue Location Banner Card */}
+        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-r from-[#0e0e0e] via-[#141414] to-[#0e0e0e] p-4 sm:p-5 shadow-lg">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-red-500/30 bg-red-500/15 text-red-400">
+                <MapPin className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-red-400">
+                    สถานที่จัดการแข่งขัน
+                  </span>
+                  <span className="rounded bg-white/10 px-1.5 py-0.5 text-[9px] font-mono text-neutral-400">
+                    RAMA 2
+                  </span>
+                </div>
+                <h3 className="text-sm sm:text-base font-bold text-white">
+                  ฟุตซอลพาร์ค พระราม 2 (Futsal Park Rama 2)
+                </h3>
+                <p className="text-xs text-neutral-400">
+                  สนามฟุตซอลหญ้าเทียม พระราม 2
+                </p>
+              </div>
+            </div>
+            <a
+              href="https://maps.app.goo.gl/ZjeS4cdJpJk1EaVQ9"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-red-700 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-red-600/30 transition hover:from-red-500 hover:to-red-600 cursor-pointer shrink-0">
+              <Navigation className="h-3.5 w-3.5" />
+              <span>เปิดนำทางใน Google Maps</span>
+              <ExternalLink className="h-3 w-3 opacity-80" />
+            </a>
+          </div>
+        </div>
 
         {/* Groups & Team Selector (with Spotlight target) */}
         <div
@@ -267,7 +391,10 @@ export default function ItRelationPage() {
                       </span>
                     </h3>
                     <p className="mt-1 text-xs leading-relaxed text-neutral-300">
-                      กดคลิกที่ปุ่มชื่อทีมด้านล่าง (เช่น <strong className="text-white">IT22, IT27, IT31</strong>) เพื่อดูเวลาแข่งขันทุกนัด และระบบจะไฮไลต์ตารางแข่งของทีมนั้นให้เด่นชัดทันที
+                      กดคลิกที่ปุ่มชื่อทีมด้านล่าง (เช่น{" "}
+                      <strong className="text-white">IT22, IT27, IT31</strong>)
+                      เพื่อดูเวลาแข่งขันทุกนัด
+                      และระบบจะไฮไลต์ตารางแข่งของทีมนั้นให้เด่นชัดทันที
                     </p>
                   </div>
                 </div>
@@ -293,7 +420,9 @@ export default function ItRelationPage() {
           )}
 
           <div className="flex items-center justify-between text-xs text-neutral-400 px-1">
-            <span className="font-medium">เลือกคลิกที่ชื่อทีมเพื่อดูเวลาแข่ง:</span>
+            <span className="font-medium">
+              เลือกคลิกที่ชื่อทีมเพื่อดูเวลาแข่ง:
+            </span>
             {selectedTeam && (
               <button
                 type="button"
@@ -309,13 +438,18 @@ export default function ItRelationPage() {
               <section
                 key={group.name}
                 className={`rounded-xl border border-white/10 bg-[#0b0b0b] p-4 sm:p-5 ${
-                  index === 0 ? "border-l-4 border-l-red-600" : "border-l-4 border-l-neutral-600"
+                  index === 0
+                    ? "border-l-4 border-l-red-600"
+                    : "border-l-4 border-l-neutral-600"
                 }`}>
                 <div className="flex items-center justify-between gap-4">
                   <h2 className="font-display text-xs font-bold tracking-wider text-white sm:text-sm">
-                    {group.name} <span className="text-neutral-500">({group.count})</span>
+                    {group.name}{" "}
+                    <span className="text-neutral-500">({group.count})</span>
                   </h2>
-                  <span className="text-[11px] text-neutral-500">{group.games}</span>
+                  <span className="text-[11px] text-neutral-500">
+                    {group.games}
+                  </span>
                 </div>
                 <div className="mt-3.5 flex flex-wrap gap-2 sm:gap-2.5">
                   {group.teams.map((team) => {
@@ -350,7 +484,9 @@ export default function ItRelationPage() {
           <div className="rounded-xl border border-red-500/30 bg-red-950/20 p-4 sm:p-5">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-red-500/20 pb-2.5">
               <span className="text-xs sm:text-sm font-bold text-red-300">
-                ตารางเวลาของทีม <span className="text-white underline">{selectedTeam}</span> ({teamSchedule.length} แมตช์ในรอบแบ่งกลุ่ม)
+                ตารางเวลาของทีม{" "}
+                <span className="text-white underline">{selectedTeam}</span> (
+                {teamSchedule.length} แมตช์ในรอบแบ่งกลุ่ม)
               </span>
               <button
                 type="button"
@@ -371,8 +507,12 @@ export default function ItRelationPage() {
                     </span>
                   </div>
                   <div className="mt-2 flex items-center justify-between text-neutral-400 text-xs">
-                    <span className="text-neutral-300 font-semibold">{item.pitch}</span>
-                    <span>พบ <strong className="text-white">{item.opponent}</strong></span>
+                    <span className="text-neutral-300 font-semibold">
+                      {item.pitch}
+                    </span>
+                    <span>
+                      พบ <strong className="text-white">{item.opponent}</strong>
+                    </span>
                   </div>
                 </div>
               ))}
@@ -383,15 +523,22 @@ export default function ItRelationPage() {
         {/* Mobile Match Card Feed (Comfortable spacing, no squished columns) */}
         <div className="space-y-3.5 md:hidden">
           <div className="flex items-center justify-between px-1 text-xs text-neutral-400">
-            <span className="font-semibold text-neutral-300">ตารางการแข่งขัน</span>
-            <span className="text-[11px] text-neutral-500">สนาม 1 & สนาม 2</span>
+            <span className="font-semibold text-neutral-300">
+              ตารางการแข่งขัน
+            </span>
+            <span className="text-[11px] text-neutral-500">
+              สนาม 1 & สนาม 2
+            </span>
           </div>
 
           {matches.map((match) => {
-            const isPitch1Team = selectedTeam && match.pitch1?.teams.includes(selectedTeam);
-            const isPitch2Team = selectedTeam && match.pitch2?.teams.includes(selectedTeam);
+            const isPitch1Team =
+              selectedTeam && match.pitch1?.teams.includes(selectedTeam);
+            const isPitch2Team =
+              selectedTeam && match.pitch2?.teams.includes(selectedTeam);
             const isTeamMatch = isPitch1Team || isPitch2Team;
-            const isDimmed = selectedTeam && !isTeamMatch && !match.lunch && !match.closing;
+            const isDimmed =
+              selectedTeam && !isTeamMatch && !match.lunch && !match.closing;
 
             if (match.lunch) {
               return (
@@ -491,9 +638,15 @@ export default function ItRelationPage() {
                 {matches.map((match) => {
                   const isTeamMatch =
                     selectedTeam &&
-                    ((match.pitch1 && match.pitch1.teams.includes(selectedTeam)) ||
-                      (match.pitch2 && match.pitch2.teams.includes(selectedTeam)));
-                  const isDimmed = selectedTeam && !isTeamMatch && !match.lunch && !match.closing;
+                    ((match.pitch1 &&
+                      match.pitch1.teams.includes(selectedTeam)) ||
+                      (match.pitch2 &&
+                        match.pitch2.teams.includes(selectedTeam)));
+                  const isDimmed =
+                    selectedTeam &&
+                    !isTeamMatch &&
+                    !match.lunch &&
+                    !match.closing;
 
                   return (
                     <tr
@@ -532,10 +685,16 @@ export default function ItRelationPage() {
                       ) : (
                         <>
                           <td className="px-5 py-3.5">
-                            <MatchCell match={match.pitch1} selectedTeam={selectedTeam} />
+                            <MatchCell
+                              match={match.pitch1}
+                              selectedTeam={selectedTeam}
+                            />
                           </td>
                           <td className="px-5 py-3.5">
-                            <MatchCell match={match.pitch2} selectedTeam={selectedTeam} />
+                            <MatchCell
+                              match={match.pitch2}
+                              selectedTeam={selectedTeam}
+                            />
                           </td>
                         </>
                       )}
@@ -552,7 +711,11 @@ export default function ItRelationPage() {
           {[
             ["คู่เปิดสนาม", "IT22 vs IT32", "text-red-400"],
             ["สนาม 2", "ครบ 7 สล็อต (11:00–15:00)", "text-neutral-300"],
-            ["รอบตัดเชือก & ชิงชนะเลิศ", "เริ่ม 15:00 น. รวม 4 คู่", "text-amber-400"],
+            [
+              "รอบตัดเชือก & ชิงชนะเลิศ",
+              "เริ่ม 15:00 น. รวม 4 คู่",
+              "text-amber-400",
+            ],
           ].map(([label, value, color]) => (
             <div
               key={label}
@@ -560,7 +723,9 @@ export default function ItRelationPage() {
               <p className="text-[10px] uppercase tracking-widest text-neutral-500">
                 {label}
               </p>
-              <p className={`mt-1.5 text-xs sm:text-sm font-bold ${color}`}>{value}</p>
+              <p className={`mt-1.5 text-xs sm:text-sm font-bold ${color}`}>
+                {value}
+              </p>
             </div>
           ))}
         </div>
@@ -582,10 +747,44 @@ export default function ItRelationPage() {
           }>
           <div className="space-y-3.5 text-sm leading-relaxed text-neutral-300">
             <p>
-              เนื่องจากเวลาการใช้สนามมีจำกัด จึงขอเรียนให้ทุกทีมทราบว่า การจัดตารางการแข่งขันอาจไม่สามารถตรงตามความต้องการของทุกทีมได้ทั้งหมด
+              เนื่องจากเวลาการใช้สนามมีจำกัด จึงขอเรียนให้ทุกทีมทราบว่า
+              การจัดตารางการแข่งขันอาจไม่สามารถตรงตามความต้องการของทุกทีมได้ทั้งหมด
             </p>
+
+            <div className="rounded-xl border border-white/10 bg-white/[0.04] p-3.5 space-y-2">
+              <div className="text-xs font-semibold text-neutral-400">
+                ⏰ ช่วงเวลาการใช้สนามแต่ละสนาม:
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <div className="rounded-lg border border-red-500/30 bg-red-950/30 p-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-red-400">สนาม 1 (Pitch 1)</span>
+                    <span className="rounded bg-red-500/20 px-1.5 py-0.5 text-[10px] font-bold text-red-300">
+                      8 ชม.
+                    </span>
+                  </div>
+                  <div className="mt-1 font-mono text-sm font-bold text-white">
+                    10:00 – 18:00 น.
+                  </div>
+                </div>
+                <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-neutral-300">สนาม 2 (Pitch 2)</span>
+                    <span className="rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-bold text-neutral-400">
+                      4 ชม.
+                    </span>
+                  </div>
+                  <div className="mt-1 font-mono text-sm font-bold text-white">
+                    11:00 – 15:00 น.
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <p>
-              อย่างไรก็ตาม ทางผู้จัดได้พยายามจัดสรรเวลาให้เหมาะสมและลงตัวมากที่สุดแล้ว จึงขอความเข้าใจและขอขอบคุณทุกทีมสำหรับความร่วมมือครับ
+              อย่างไรก็ตาม
+              ทางผู้จัดได้พยายามจัดสรรเวลาให้เหมาะสมและลงตัวมากที่สุดแล้ว
+              จึงขอความเข้าใจและขอขอบคุณทุกทีมสำหรับความร่วมมือครับ
             </p>
           </div>
         </SystemModal>
