@@ -16,39 +16,39 @@ type Match = {
 const matches: Match[] = [
   {
     time: "10:00 – 10:30",
-    pitch1: { tag: "A1", teams: "IT22  VS  IT32" },
+    pitch1: { tag: "B1", teams: "IT31  VS  IT15" },
     pitch2: { tag: "—", teams: "สนามยังไม่เปิด", tone: "muted" },
   },
   {
     time: "10:30 – 11:00",
-    pitch1: { tag: "A2", teams: "IT27  VS  IT16+17" },
+    pitch1: { tag: "B2", teams: "IT24  VS  IT30" },
     pitch2: { tag: "—", teams: "สนามยังไม่เปิด", tone: "muted" },
   },
   {
     time: "11:00 – 11:30",
-    pitch1: { tag: "B1", teams: "IT31  VS  IT15" },
-    pitch2: { tag: "B2", teams: "IT24  VS  IT30" },
+    pitch1: { tag: "A1", teams: "IT27  VS  IT22" },
+    pitch2: { tag: "A2", teams: "IT32  VS  IT16+17" },
   },
   {
     time: "11:30 – 12:00",
-    pitch1: { tag: "A3", teams: "IT22  VS  IT16+17" },
-    pitch2: { tag: "A4", teams: "IT27  VS  IT32" },
+    pitch1: { tag: "B3", teams: "IT31  VS  IT24" },
+    pitch2: { tag: "B4", teams: "IT15  VS  IT30" },
   },
   { time: "12:00 – 12:30", lunch: "พักรับประทานอาหารกลางวัน · 30 นาที" },
   {
     time: "12:30 – 13:00",
-    pitch1: { tag: "B3", teams: "IT31  VS  IT24" },
-    pitch2: { tag: "B4", teams: "IT15  VS  IT30" },
+    pitch1: { tag: "A3", teams: "IT27  VS  IT32" },
+    pitch2: { tag: "A4", teams: "IT22  VS  IT16+17" },
   },
   {
     time: "13:00 – 13:30",
-    pitch1: { tag: "A5", teams: "IT32  VS  IT16+17" },
-    pitch2: { tag: "A6", teams: "IT27  VS  IT22" },
+    pitch1: { tag: "B5", teams: "IT31  VS  IT30" },
+    pitch2: { tag: "B6", teams: "IT15  VS  IT24" },
   },
   {
     time: "13:30 – 14:00",
-    pitch1: { tag: "B5", teams: "IT31  VS  IT30" },
-    pitch2: { tag: "B6", teams: "IT15  VS  IT24" },
+    pitch1: { tag: "A5", teams: "IT27  VS  IT16+17" },
+    pitch2: { tag: "A6", teams: "IT22  VS  IT32" },
   },
   {
     time: "14:00 – 14:30",
@@ -738,7 +738,7 @@ export default function ItRelationPage() {
         {/* Footer Summary */}
         <div className="grid gap-3 sm:grid-cols-3">
           {[
-            ["คู่เปิดสนาม", "IT22 vs IT32", "text-red-400"],
+            ["คู่เปิดสนาม", "IT31 vs IT15", "text-red-400"],
             ["สนาม 2", "ครบ 7 สล็อตเต็ม (11:00–15:00)", "text-neutral-300"],
             [
               "รอบตัดเชือก & ชิงชนะเลิศ",
