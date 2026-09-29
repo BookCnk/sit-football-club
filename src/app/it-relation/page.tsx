@@ -9,6 +9,7 @@ type Match = {
   pitch1?: { tag: string; teams: string; tone?: "red" | "gold" | "muted" };
   pitch2?: { tag: string; teams: string; tone?: "red" | "gold" | "muted" };
   lunch?: string;
+  intermission?: string;
   closing?: string;
 };
 
@@ -26,51 +27,47 @@ const matches: Match[] = [
   {
     time: "11:00 – 11:30",
     pitch1: { tag: "B1", teams: "IT31  VS  IT15" },
-    pitch2: { tag: "A3", teams: "IT22  VS  IT30" },
+    pitch2: { tag: "B2", teams: "IT24  VS  IT30" },
   },
   {
     time: "11:30 – 12:00",
-    pitch1: { tag: "B2", teams: "IT24  VS  DSI" },
-    pitch2: { tag: "A4", teams: "IT32  VS  IT16+17" },
+    pitch1: { tag: "A3", teams: "IT22  VS  IT16+17" },
+    pitch2: { tag: "A4", teams: "IT27  VS  IT32" },
   },
   { time: "12:00 – 12:30", lunch: "พักรับประทานอาหารกลางวัน · 30 นาที" },
   {
     time: "12:30 – 13:00",
     pitch1: { tag: "B3", teams: "IT31  VS  IT24" },
-    pitch2: { tag: "A5", teams: "IT27  VS  IT30" },
+    pitch2: { tag: "B4", teams: "IT15  VS  IT30" },
   },
   {
     time: "13:00 – 13:30",
-    pitch1: { tag: "B4", teams: "IT15  VS  DSI" },
-    pitch2: { tag: "A6", teams: "IT22  VS  IT16+17" },
+    pitch1: { tag: "A5", teams: "IT32  VS  IT16+17" },
+    pitch2: { tag: "A6", teams: "IT27  VS  IT22" },
   },
   {
     time: "13:30 – 14:00",
-    pitch1: { tag: "B5", teams: "IT31  VS  DSI" },
-    pitch2: { tag: "A7", teams: "IT27  VS  IT32" },
+    pitch1: { tag: "B5", teams: "IT31  VS  IT30" },
+    pitch2: { tag: "B6", teams: "IT15  VS  IT24" },
   },
   {
     time: "14:00 – 14:30",
-    pitch1: { tag: "A8", teams: "IT27  VS  IT22" },
-    pitch2: { tag: "A9", teams: "IT30  VS  IT16+17" },
+    pitch1: {
+      tag: "ชิงอันดับ 5",
+      teams: "อันดับ 3 สาย A  VS  อันดับ 3 สาย B",
+    },
+    pitch2: {
+      tag: "ชิงอันดับ 7",
+      teams: "อันดับ 4 สาย A  VS  อันดับ 4 สาย B",
+    },
   },
   {
     time: "14:30 – 15:00",
-    pitch1: { tag: "B6", teams: "IT15  VS  IT24" },
-    pitch2: { tag: "A10", teams: "IT32  VS  IT30" },
+    pitch1: { tag: "รอบรองฯ 1", teams: "อันดับ 1 สาย A  VS  อันดับ 2 สาย B" },
+    pitch2: { tag: "รอบรองฯ 2", teams: "อันดับ 1 สาย B  VS  อันดับ 2 สาย A" },
   },
   {
     time: "15:00 – 15:30",
-    pitch1: { tag: "รอบรองฯ 1", teams: "อันดับ 1 สาย A  VS  อันดับ 2 สาย B" },
-    pitch2: { tag: "ปิดสนาม", teams: "สนาม 2 ปิด", tone: "muted" },
-  },
-  {
-    time: "15:30 – 16:00",
-    pitch1: { tag: "รอบรองฯ 2", teams: "อันดับ 1 สาย B  VS  อันดับ 2 สาย A" },
-    pitch2: { tag: "ปิดสนาม", teams: "สนาม 2 ปิด", tone: "muted" },
-  },
-  {
-    time: "16:00 – 16:30",
     pitch1: {
       tag: "ชิงอันดับ 3",
       teams: "ผู้แพ้รอบรองฯ 1  VS  ผู้แพ้รอบรองฯ 2",
@@ -78,7 +75,7 @@ const matches: Match[] = [
     pitch2: { tag: "ปิดสนาม", teams: "สนาม 2 ปิด", tone: "muted" },
   },
   {
-    time: "16:30 – 17:00",
+    time: "15:30 – 16:30",
     pitch1: {
       tag: "🏆 ชิงชนะเลิศ",
       teams: "ผู้ชนะรอบรองฯ 1  VS  ผู้ชนะรอบรองฯ 2",
@@ -87,7 +84,7 @@ const matches: Match[] = [
     pitch2: { tag: "ปิดสนาม", teams: "สนาม 2 ปิด", tone: "muted" },
   },
   {
-    time: "17:00 – 18:00",
+    time: "16:30 – 18:00",
     closing: "มอบถ้วยรางวัล · ถ่ายภาพร่วมกัน · สิ้นสุดกิจกรรม",
   },
 ];
@@ -95,15 +92,15 @@ const matches: Match[] = [
 const groups = [
   {
     name: "GROUP A",
-    count: "5 ทีม",
-    games: "พบกันทั้งหมด 10 นัด",
-    teams: ["IT27", "IT22", "IT32", "IT30", "IT16+17"],
+    count: "4 ทีม",
+    games: "พบกันทั้งหมด 6 นัด",
+    teams: ["IT27", "IT22", "IT32", "IT16+17"],
   },
   {
     name: "GROUP B",
     count: "4 ทีม",
     games: "พบกันทั้งหมด 6 นัด",
-    teams: ["IT31", "IT15", "IT24", "DSI"],
+    teams: ["IT31", "IT15", "IT24", "IT30"],
   },
 ];
 
@@ -296,7 +293,7 @@ export default function ItRelationPage() {
             IT RELATION
           </h1>
           <p className="mx-auto mt-3 max-w-xl text-xs leading-relaxed text-neutral-400 sm:text-sm">
-            รอบแรก 10:00 – 15:00 น. · รอบตัดเชือกไขว้สาย & ชิงชนะเลิศ 15:00 –
+            รอบแรก 10:00 – 14:00 น. · รอบจัดอันดับ & ชิงชนะเลิศ 14:00 –
             17:00 น.
           </p>
 
@@ -538,7 +535,11 @@ export default function ItRelationPage() {
               selectedTeam && match.pitch2?.teams.includes(selectedTeam);
             const isTeamMatch = isPitch1Team || isPitch2Team;
             const isDimmed =
-              selectedTeam && !isTeamMatch && !match.lunch && !match.closing;
+              selectedTeam &&
+              !isTeamMatch &&
+              !match.lunch &&
+              !match.intermission &&
+              !match.closing;
 
             if (match.lunch) {
               return (
@@ -552,6 +553,23 @@ export default function ItRelationPage() {
                   </div>
                   <div className="mt-1 text-xs sm:text-sm font-bold text-amber-300">
                     ◈ {match.lunch}
+                  </div>
+                </div>
+              );
+            }
+
+            if (match.intermission) {
+              return (
+                <div
+                  key={match.time}
+                  className={`rounded-xl border border-sky-500/20 bg-sky-500/[0.06] p-4 text-center transition-all ${
+                    isDimmed ? "opacity-35" : "opacity-100"
+                  }`}>
+                  <div className="font-mono text-xs font-semibold text-sky-400/80">
+                    {match.time}
+                  </div>
+                  <div className="mt-1 text-xs sm:text-sm font-bold text-sky-300">
+                    ◈ {match.intermission}
                   </div>
                 </div>
               );
@@ -646,6 +664,7 @@ export default function ItRelationPage() {
                     selectedTeam &&
                     !isTeamMatch &&
                     !match.lunch &&
+                    !match.intermission &&
                     !match.closing;
 
                   return (
@@ -656,9 +675,11 @@ export default function ItRelationPage() {
                           ? "bg-red-950/25 border-l-4 border-l-red-500"
                           : match.lunch
                             ? "bg-amber-500/[0.04]"
-                            : match.closing
-                              ? "bg-red-500/[0.04]"
-                              : "hover:bg-white/[0.02]"
+                            : match.intermission
+                              ? "bg-sky-500/[0.04]"
+                              : match.closing
+                                ? "bg-red-500/[0.04]"
+                                : "hover:bg-white/[0.02]"
                       } ${isDimmed ? "opacity-25" : "opacity-100"}`}>
                       <td
                         className={`whitespace-nowrap px-5 py-3.5 font-mono text-xs font-semibold ${
@@ -666,7 +687,9 @@ export default function ItRelationPage() {
                             ? "text-red-400 font-bold"
                             : match.lunch
                               ? "text-amber-400"
-                              : "text-neutral-400"
+                              : match.intermission
+                                ? "text-sky-400"
+                                : "text-neutral-400"
                         }`}>
                         {match.time}
                       </td>
@@ -675,6 +698,12 @@ export default function ItRelationPage() {
                           colSpan={2}
                           className="px-5 py-3.5 text-center text-xs font-semibold tracking-wide text-amber-400">
                           ◈ {match.lunch}
+                        </td>
+                      ) : match.intermission ? (
+                        <td
+                          colSpan={2}
+                          className="px-5 py-3.5 text-center text-xs font-semibold tracking-wide text-sky-300">
+                          ◈ {match.intermission}
                         </td>
                       ) : match.closing ? (
                         <td
@@ -710,10 +739,10 @@ export default function ItRelationPage() {
         <div className="grid gap-3 sm:grid-cols-3">
           {[
             ["คู่เปิดสนาม", "IT22 vs IT32", "text-red-400"],
-            ["สนาม 2", "ครบ 7 สล็อต (11:00–15:00)", "text-neutral-300"],
+            ["สนาม 2", "ครบ 7 สล็อตเต็ม (11:00–15:00)", "text-neutral-300"],
             [
               "รอบตัดเชือก & ชิงชนะเลิศ",
-              "เริ่ม 15:00 น. รวม 4 คู่",
+              "ชิงอันดับ 3 & ชิงแชมป์ (เริ่ม 15:00 น.)",
               "text-amber-400",
             ],
           ].map(([label, value, color]) => (
